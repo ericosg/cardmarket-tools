@@ -1,4 +1,5 @@
 {
+  "_comment": "Credentials are optional - only required for live API mode (--live flag). Export mode (default) works without credentials.",
   "credentials": {
     "appToken": "your-app-token-here",
     "appSecret": "your-app-secret-here",

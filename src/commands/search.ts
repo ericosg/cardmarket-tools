@@ -16,20 +16,41 @@ import {
  * Execute a search command
  */
 export class SearchCommand {
-  private api: CardmarketAPI;
+  private api?: CardmarketAPI;
   private config: Config;
   private exportSearcher?: ExportSearcher;
 
   constructor(config: Config) {
     this.config = config;
+  }
+
+  /**
+   * Get or create API instance
+   * Validates credentials when creating API client
+   */
+  private getAPI(): CardmarketAPI {
+    if (this.api) {
+      return this.api;
+    }
+
+    // Validate credentials are available
+    if (!this.config.credentials) {
+      throw new Error(
+        'API credentials not found in config.json.\n' +
+        'Live API mode requires Cardmarket API credentials.\n' +
+        'Please add your credentials to config.json or use export mode (default).\n' +
+        'Get API credentials at: https://www.cardmarket.com/en/Magic/Account/API'
+      );
+    }
 
     const client = new CardmarketClient(
-      config.credentials,
-      config.cache.enabled,
-      config.cache.ttl
+      this.config.credentials,
+      this.config.cache.enabled,
+      this.config.cache.ttl
     );
 
     this.api = new CardmarketAPI(client);
+    return this.api;
   }
 
   /**
@@ -188,8 +209,11 @@ export class SearchCommand {
     const currency = this.config.preferences.currency;
     const userCountry = this.config.preferences.country;
 
+    // Get API instance (will validate credentials)
+    const api = this.getAPI();
+
     // Search for products
-    const products = await this.api.searchProducts(searchTerm, {
+    const products = await api.searchProducts(searchTerm, {
       maxResults,
       useCache,
       idLanguage: options.language ? CardmarketAPI.getLanguageId(options.language) : undefined,
@@ -204,7 +228,7 @@ export class SearchCommand {
     const results: SearchResult[] = [];
 
     for (const product of products) {
-      const articlesResponse = await this.api.getArticles(product.idProduct, {
+      const articlesResponse = await api.getArticles(product.idProduct, {
         maxResults: maxResults * 2, // Get more articles for better filtering
         minCondition: options.condition,
         isFoil: options.foil,

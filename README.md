@@ -18,7 +18,7 @@ A command-line tool for searching Magic: The Gathering cards on Cardmarket (EU) 
 
 - Node.js >= 18.0.0
 - pnpm package manager
-- Cardmarket API credentials (App Token, App Secret, Access Token, Access Token Secret)
+- Cardmarket API credentials (optional - only required for live API mode with `--live` flag or advanced features)
 
 ## Installation
 
@@ -38,11 +38,15 @@ pnpm install
 cp config.example.json config.json
 ```
 
-4. Edit `config.json` with your Cardmarket API credentials and preferences.
+4. Edit `config.json` with your preferences. API credentials are optional - only needed for live API mode.
 
-## Getting Cardmarket API Credentials
+## Getting Cardmarket API Credentials (Optional)
 
-To use this tool, you need API credentials from Cardmarket:
+API credentials are only required if you want to use live API features (real-time seller offers, condition filtering, shipping calculations).
+
+For basic price lookups using export data (default mode), you can skip this section entirely and remove the credentials section from your config.json.
+
+To get API credentials for live mode:
 
 1. Log in to your Cardmarket account
 2. Visit: https://www.cardmarket.com/en/Magic/Account/API
@@ -88,7 +92,7 @@ Create a `config.json` file in the root directory:
 
 ### Configuration Options
 
-- `credentials`: Your Cardmarket API credentials (required for live API mode)
+- `credentials`: Your Cardmarket API credentials (optional - only required for live API mode with `--live` flag or advanced features like `--condition`, `--include-shipping`, etc.)
 - `preferences.country`: Your country code for shipping calculations (ISO 3166-1 alpha-2)
 - `preferences.currency`: Preferred currency display (EUR, USD, GBP, etc.)
 - `preferences.language`: Interface language

@@ -226,8 +226,10 @@ Important constants:
     }
   }
   ```
-- **Validation:** Strict validation with helpful error messages, checks for placeholder values
-- **Note:** Credentials only required when using live API mode, not for export mode
+- **Validation:** Strict validation with helpful error messages
+- **Optional Credentials:** Credentials field is optional - only required for live API mode
+- **Validation Logic:** Credentials validated only when API client is created (lazy validation)
+- **Note:** Export mode works without any API credentials
 
 ### CLI (src/index.ts)
 - **Framework:** Commander.js (v11.1.0)
@@ -555,6 +557,23 @@ The project is considered "working" when:
 ---
 
 ## Recent Updates
+
+### Optional API Credentials (2025-11-03)
+Made API credentials optional - only required when using live API mode:
+
+**What Changed:**
+- Modified Config type to make credentials optional
+- Updated config validation to allow missing credentials
+- Added lazy validation in SearchCommand.getAPI()
+- Credentials only validated when API mode is actually used
+- Clear error message when live mode requested without credentials
+- Updated config.example.json with comment about optional credentials
+
+**Benefits:**
+- No setup required for basic price lookups
+- Export mode works immediately without API registration
+- Lower barrier to entry for new users
+- Credentials only needed for advanced features
 
 ### Export Data Feature (2025-11-03)
 Major update adding dual-mode data source capability:

@@ -75,17 +75,28 @@ export class ConfigLoader {
 
     const cfg = config as Record<string, unknown>;
 
-    // Validate credentials
-    if (!cfg.credentials || typeof cfg.credentials !== 'object') {
-      throw new ConfigError('Configuration must include "credentials" object');
-    }
+    // Validate credentials (optional - only required for API mode)
+    let validatedCredentials: {
+      appToken: string;
+      appSecret: string;
+      accessToken: string;
+      accessTokenSecret: string;
+    } | undefined;
 
-    const credentials = cfg.credentials as Record<string, unknown>;
-    const requiredCredentials = ['appToken', 'appSecret', 'accessToken', 'accessTokenSecret'];
+    if (cfg.credentials && typeof cfg.credentials === 'object') {
+      const credentials = cfg.credentials as Record<string, unknown>;
+      const requiredCredentials = ['appToken', 'appSecret', 'accessToken', 'accessTokenSecret'];
+      const hasAllCredentials = requiredCredentials.every(
+        field => credentials[field] && typeof credentials[field] === 'string'
+      );
 
-    for (const field of requiredCredentials) {
-      if (!credentials[field] || typeof credentials[field] !== 'string') {
-        throw new ConfigError(`Missing or invalid credential: ${field}`);
+      if (hasAllCredentials) {
+        validatedCredentials = {
+          appToken: credentials.appToken as string,
+          appSecret: credentials.appSecret as string,
+          accessToken: credentials.accessToken as string,
+          accessTokenSecret: credentials.accessTokenSecret as string,
+        };
       }
     }
 
@@ -132,12 +143,7 @@ export class ConfigLoader {
 
     // Build validated config with defaults
     const validatedConfig: Config = {
-      credentials: {
-        appToken: credentials.appToken as string,
-        appSecret: credentials.appSecret as string,
-        accessToken: credentials.accessToken as string,
-        accessTokenSecret: credentials.accessTokenSecret as string,
-      },
+      credentials: validatedCredentials,
       preferences: {
         country: (preferences.country as string) || 'DE',
         currency: (preferences.currency as string) || 'EUR',

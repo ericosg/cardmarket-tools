@@ -1,7 +1,7 @@
 // Shared TypeScript types for the Cardmarket CLI
 
 export interface Config {
-  credentials: Credentials;
+  credentials?: Credentials;
   preferences: Preferences;
   cache: CacheConfig;
   export: ExportConfig;
