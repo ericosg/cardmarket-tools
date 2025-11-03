@@ -88,10 +88,16 @@ program
 
       const result = await ExportDownloader.downloadAll(force);
 
-      if (result.productsDownloaded) {
-        console.log('✓ Products catalog updated');
+      if (result.productsSinglesDownloaded) {
+        console.log('✓ Singles catalog updated');
       } else {
-        console.log('✓ Products catalog is up to date');
+        console.log('✓ Singles catalog is up to date');
+      }
+
+      if (result.productsNonsinglesDownloaded) {
+        console.log('✓ Sealed products catalog updated');
+      } else {
+        console.log('✓ Sealed products catalog is up to date');
       }
 
       if (result.priceGuideDownloaded) {
@@ -102,7 +108,8 @@ program
 
       const status = ExportDownloader.getDataStatus();
       console.log(`\nData status:`);
-      console.log(`  Products age: ${status.productsAge ? Math.floor(status.productsAge) + 'h' : 'N/A'}`);
+      console.log(`  Singles age: ${status.productsSinglesAge ? Math.floor(status.productsSinglesAge) + 'h' : 'N/A'}`);
+      console.log(`  Sealed products age: ${status.productsNonsinglesAge ? Math.floor(status.productsNonsinglesAge) + 'h' : 'N/A'}`);
       console.log(`  Price guide age: ${status.priceGuideAge ? Math.floor(status.priceGuideAge) + 'h' : 'N/A'}`);
 
     } catch (error) {

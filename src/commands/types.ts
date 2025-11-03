@@ -19,6 +19,7 @@ export interface Preferences {
   currency: string;
   language: string;
   maxResults: number;
+  defaultSort?: ExportSortOption;
 }
 
 export interface CacheConfig {
@@ -53,6 +54,7 @@ export interface SearchOptions {
 
 export type CardCondition = 'MT' | 'NM' | 'EX' | 'GD' | 'LP' | 'PL' | 'PO';
 export type SortOption = 'price' | 'condition' | 'seller-rating';
+export type ExportSortOption = 'trend' | 'low' | 'avg' | 'name' | 'none';
 
 // API Response Types
 

@@ -10,7 +10,8 @@
     "country": "DE",
     "currency": "EUR",
     "language": "en",
-    "maxResults": 20
+    "maxResults": 20,
+    "defaultSort": "avg"
   },
   "cache": {
     "enabled": true,

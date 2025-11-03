@@ -151,11 +151,25 @@ export class SearchCommand {
       });
     }
 
-    // Sort by price (trend)
-    if (options.sort === 'price') {
+    // Determine sort method
+    const sortBy = options.sort === 'price' ? 'trend' : (this.config.preferences.defaultSort || 'avg');
+
+    // Sort results
+    if (sortBy !== 'none') {
       filteredResults.sort((a, b) => {
-        const priceA = a.priceGuide?.trend ?? 0;
-        const priceB = b.priceGuide?.trend ?? 0;
+        if (sortBy === 'name') {
+          return a.product.name.localeCompare(b.product.name);
+        }
+
+        // Sort by price field (trend, low, or avg)
+        const priceA = a.priceGuide?.[sortBy];
+        const priceB = b.priceGuide?.[sortBy];
+
+        // Handle null/undefined - put them at the end
+        if (priceA == null && priceB == null) return 0;
+        if (priceA == null) return 1;
+        if (priceB == null) return -1;
+
         return priceA - priceB;
       });
     }

@@ -24,12 +24,27 @@ export class ExportSearcher {
     // Download if needed (non-forced)
     await ExportDownloader.downloadAll(false);
 
-    // Load products
-    const productsData = ExportDownloader.loadProducts();
-    if (productsData) {
-      this.products = productsData.products;
+    // Load singles
+    const singlesData = ExportDownloader.loadProductsSingles();
+    if (singlesData) {
+      this.products = singlesData.products;
+      this.productsDate = new Date(singlesData.createdAt);
+    }
+
+    // Load non-singles and merge
+    const nonsinglesData = ExportDownloader.loadProductsNonsingles();
+    if (nonsinglesData) {
+      this.products = [...this.products, ...nonsinglesData.products];
+      // Use the older date for safety
+      const nonsinglesDate = new Date(nonsinglesData.createdAt);
+      if (!this.productsDate || nonsinglesDate < this.productsDate) {
+        this.productsDate = nonsinglesDate;
+      }
+    }
+
+    // Mark as loaded if we have at least singles
+    if (this.products.length > 0) {
       this.productsLoaded = true;
-      this.productsDate = new Date(productsData.createdAt);
     }
 
     // Load price guide

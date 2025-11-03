@@ -36,29 +36,31 @@ export class HelpCommand {
 
     console.log(chalk.bold('OPTIONS:'));
     console.log(chalk.yellow('  Filtering Options:'));
-    console.log('    --condition <code>      Card condition (MT, NM, EX, GD, LP, PL, PO)');
-    console.log('    --foil                  Only foil cards');
-    console.log('    --signed                Only signed cards');
-    console.log('    --altered               Only altered cards');
-    console.log('    --language <code>       Card language (EN, DE, FR, IT, ES, JP, etc.)');
-    console.log('    --set <code>            Expansion set code');
-    console.log('    --min-price <number>    Minimum price');
-    console.log('    --max-price <number>    Maximum price\n');
+    console.log('    --condition <code>      Card condition (default: none)');
+    console.log('                            Values: MT, NM, EX, GD, LP, PL, PO');
+    console.log('    --foil                  Only foil cards (default: false)');
+    console.log('    --signed                Only signed cards (default: false)');
+    console.log('    --altered               Only altered cards (default: false)');
+    console.log('    --language <code>       Card language (default: all)');
+    console.log('                            Values: EN, DE, FR, IT, ES, JP, etc.');
+    console.log('    --set <code>            Expansion set code (default: all)');
+    console.log('    --min-price <number>    Minimum price (default: none)');
+    console.log('    --max-price <number>    Maximum price (default: none)\n');
 
-    console.log(chalk.yellow('  Shipping Options:'));
-    console.log('    --include-shipping      Include shipping costs in results');
-    console.log('    --filter-country        Only show sellers who ship to your country');
-    console.log('    --group-by-seller       Group articles by seller\n');
+    console.log(chalk.yellow('  Shipping Options (Forces Live API):'));
+    console.log('    --include-shipping      Include shipping costs in results (default: false)');
+    console.log('    --filter-country        Only show sellers who ship to your country (default: false)');
+    console.log('    --group-by-seller       Group articles by seller (default: false)\n');
 
     console.log(chalk.yellow('  Display Options:'));
-    console.log('    --top <number>          Show only top N offers');
-    console.log('    --sort <option>         Sort by: price, condition, seller-rating');
-    console.log('    --json                  Output in JSON format');
-    console.log('    --max-results <number>  Maximum number of results\n');
+    console.log('    --top <number>          Show only top N offers (default: all)');
+    console.log('    --sort <option>         Sort by: price, condition, seller-rating (default: avg price in export mode)');
+    console.log('    --json                  Output in JSON format (default: table)');
+    console.log('    --max-results <number>  Maximum number of results (default: 20)\n');
 
     console.log(chalk.yellow('  Data Source Options:'));
-    console.log('    --live                  Force live API data (default: use export)');
-    console.log('    --no-cache              Disable API caching for this request\n');
+    console.log('    --live                  Force live API data (default: export mode)');
+    console.log('    --no-cache              Disable API caching for this request (default: cache enabled)\n');
 
     console.log(chalk.yellow('  Other Options:'));
     console.log('    --help, -h              Show this help message\n');
@@ -74,8 +76,9 @@ export class HelpCommand {
 
     console.log(chalk.bold('DATA SOURCES:'));
     console.log('  By default, searches use cached export data (updated daily)');
-    console.log('  Export data includes: card names, prices, trends');
-    console.log('  Export data does NOT include: individual seller offers, conditions');
+    console.log('  Export data includes: singles AND sealed products (boosters, boxes, etc.), prices, trends');
+    console.log('  Export data does NOT include: individual seller offers, conditions, shipping');
+    console.log('  Export data is sorted by avg price by default (configurable in config.json)');
     console.log('  Use --live for real-time seller offers and shipping calculations');
     console.log('  Use --include-shipping to automatically use live API data\n');
 
@@ -87,7 +90,13 @@ export class HelpCommand {
     console.log(chalk.bold('CONFIGURATION:'));
     console.log('  Configuration file: config.json');
     console.log('  Create from template: cp config.example.json config.json');
-    console.log('  Edit with your Cardmarket API credentials\n');
+    console.log('  Edit with your preferences and API credentials (optional)\n');
+    console.log('  Configurable defaults:');
+    console.log('    preferences.defaultSort    Export sort order: trend, low, avg, name, none (default: avg)');
+    console.log('    preferences.maxResults     Maximum results per search (default: 20)');
+    console.log('    preferences.currency       Display currency (default: EUR)');
+    console.log('    export.enabled             Enable export data mode (default: true)');
+    console.log('    export.autoUpdate          Auto-download on first run (default: true)\n');
 
     console.log(chalk.bold('DOCUMENTATION:'));
     console.log('  README.md            - Full documentation');

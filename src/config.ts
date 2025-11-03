@@ -119,6 +119,18 @@ export class ConfigLoader {
       throw new ConfigError('preferences.maxResults must be a number');
     }
 
+    if (preferences.defaultSort && typeof preferences.defaultSort !== 'string') {
+      throw new ConfigError('preferences.defaultSort must be a string');
+    }
+
+    // Validate defaultSort value
+    const validSortOptions = ['trend', 'low', 'avg', 'name', 'none'];
+    if (preferences.defaultSort && !validSortOptions.includes(preferences.defaultSort as string)) {
+      throw new ConfigError(
+        `preferences.defaultSort must be one of: ${validSortOptions.join(', ')}`
+      );
+    }
+
     // Validate cache settings (optional)
     const cache = cfg.cache as Record<string, unknown> || {};
 
@@ -149,6 +161,7 @@ export class ConfigLoader {
         currency: (preferences.currency as string) || 'EUR',
         language: (preferences.language as string) || 'en',
         maxResults: (preferences.maxResults as number) || 20,
+        defaultSort: (preferences.defaultSort as 'trend' | 'low' | 'avg' | 'name' | 'none') || 'avg',
       },
       cache: {
         enabled: cache.enabled !== undefined ? (cache.enabled as boolean) : true,

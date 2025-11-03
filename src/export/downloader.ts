@@ -4,10 +4,12 @@ import path from 'path';
 import { PriceGuideExport, ProductsExport } from './types';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
-const PRODUCTS_FILE = path.join(DATA_DIR, 'products_singles.json');
+const PRODUCTS_SINGLES_FILE = path.join(DATA_DIR, 'products_singles.json');
+const PRODUCTS_NONSINGLES_FILE = path.join(DATA_DIR, 'products_nonsingles.json');
 const PRICE_GUIDE_FILE = path.join(DATA_DIR, 'price_guide.json');
 
-const PRODUCTS_URL = 'https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_1.json';
+const PRODUCTS_SINGLES_URL = 'https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_1.json';
+const PRODUCTS_NONSINGLES_URL = 'https://downloads.s3.cardmarket.com/productCatalog/productList/products_nonsingles_1.json';
 const PRICE_GUIDE_URL = 'https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json';
 
 const MAX_AGE_HOURS = 24;
@@ -91,20 +93,40 @@ export class ExportDownloader {
   }
 
   /**
-   * Download products file if needed
+   * Download products singles file if needed
    * @param force Force download even if file is recent
    */
-  static async downloadProducts(force: boolean = false): Promise<boolean> {
+  static async downloadProductsSingles(force: boolean = false): Promise<boolean> {
     ExportDownloader.ensureDataDirectory();
 
-    if (!force && ExportDownloader.isFileRecent(PRODUCTS_FILE)) {
+    if (!force && ExportDownloader.isFileRecent(PRODUCTS_SINGLES_FILE)) {
       return false; // Already up to date
     }
 
     await ExportDownloader.downloadFile(
-      PRODUCTS_URL,
-      PRODUCTS_FILE,
-      'product catalog'
+      PRODUCTS_SINGLES_URL,
+      PRODUCTS_SINGLES_FILE,
+      'singles catalog'
+    );
+
+    return true;
+  }
+
+  /**
+   * Download products non-singles file if needed
+   * @param force Force download even if file is recent
+   */
+  static async downloadProductsNonsingles(force: boolean = false): Promise<boolean> {
+    ExportDownloader.ensureDataDirectory();
+
+    if (!force && ExportDownloader.isFileRecent(PRODUCTS_NONSINGLES_FILE)) {
+      return false; // Already up to date
+    }
+
+    await ExportDownloader.downloadFile(
+      PRODUCTS_NONSINGLES_URL,
+      PRODUCTS_NONSINGLES_FILE,
+      'sealed products catalog'
     );
 
     return true;
@@ -135,32 +157,53 @@ export class ExportDownloader {
    * @param force Force download even if files are recent
    */
   static async downloadAll(force: boolean = false): Promise<{
-    productsDownloaded: boolean;
+    productsSinglesDownloaded: boolean;
+    productsNonsinglesDownloaded: boolean;
     priceGuideDownloaded: boolean;
   }> {
-    const productsDownloaded = await ExportDownloader.downloadProducts(force);
+    const productsSinglesDownloaded = await ExportDownloader.downloadProductsSingles(force);
+    const productsNonsinglesDownloaded = await ExportDownloader.downloadProductsNonsingles(force);
     const priceGuideDownloaded = await ExportDownloader.downloadPriceGuide(force);
 
     return {
-      productsDownloaded,
+      productsSinglesDownloaded,
+      productsNonsinglesDownloaded,
       priceGuideDownloaded,
     };
   }
 
   /**
-   * Load products from disk
+   * Load products singles from disk
    * @returns Parsed products data
    */
-  static loadProducts(): ProductsExport | null {
-    if (!fs.existsSync(PRODUCTS_FILE)) {
+  static loadProductsSingles(): ProductsExport | null {
+    if (!fs.existsSync(PRODUCTS_SINGLES_FILE)) {
       return null;
     }
 
     try {
-      const data = fs.readFileSync(PRODUCTS_FILE, 'utf-8');
+      const data = fs.readFileSync(PRODUCTS_SINGLES_FILE, 'utf-8');
       return JSON.parse(data) as ProductsExport;
     } catch (error) {
-      console.error('Failed to load products file:', error);
+      console.error('Failed to load singles file:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Load products non-singles from disk
+   * @returns Parsed products data
+   */
+  static loadProductsNonsingles(): ProductsExport | null {
+    if (!fs.existsSync(PRODUCTS_NONSINGLES_FILE)) {
+      return null;
+    }
+
+    try {
+      const data = fs.readFileSync(PRODUCTS_NONSINGLES_FILE, 'utf-8');
+      return JSON.parse(data) as ProductsExport;
+    } catch (error) {
+      console.error('Failed to load sealed products file:', error);
       return null;
     }
   }
@@ -189,7 +232,8 @@ export class ExportDownloader {
    */
   static needsUpdate(): boolean {
     return (
-      !ExportDownloader.isFileRecent(PRODUCTS_FILE) ||
+      !ExportDownloader.isFileRecent(PRODUCTS_SINGLES_FILE) ||
+      !ExportDownloader.isFileRecent(PRODUCTS_NONSINGLES_FILE) ||
       !ExportDownloader.isFileRecent(PRICE_GUIDE_FILE)
     );
   }
@@ -198,16 +242,20 @@ export class ExportDownloader {
    * Get data status
    */
   static getDataStatus(): {
-    productsExists: boolean;
+    productsSinglesExists: boolean;
+    productsNonsinglesExists: boolean;
     priceGuideExists: boolean;
-    productsAge: number | null;
+    productsSinglesAge: number | null;
+    productsNonsinglesAge: number | null;
     priceGuideAge: number | null;
     needsUpdate: boolean;
   } {
     return {
-      productsExists: fs.existsSync(PRODUCTS_FILE),
+      productsSinglesExists: fs.existsSync(PRODUCTS_SINGLES_FILE),
+      productsNonsinglesExists: fs.existsSync(PRODUCTS_NONSINGLES_FILE),
       priceGuideExists: fs.existsSync(PRICE_GUIDE_FILE),
-      productsAge: ExportDownloader.getFileAge(PRODUCTS_FILE),
+      productsSinglesAge: ExportDownloader.getFileAge(PRODUCTS_SINGLES_FILE),
+      productsNonsinglesAge: ExportDownloader.getFileAge(PRODUCTS_NONSINGLES_FILE),
       priceGuideAge: ExportDownloader.getFileAge(PRICE_GUIDE_FILE),
       needsUpdate: ExportDownloader.needsUpdate(),
     };
