@@ -5,11 +5,13 @@ A command-line tool for searching Magic: The Gathering cards on Cardmarket (EU) 
 ## Features
 
 - 🔍 Search for MTG cards on Cardmarket
+- 📦 **Export Data Mode** - Uses daily Cardmarket export files by default (no API calls needed!)
 - 💰 Compare prices including shipping costs to your location
 - 🌍 Filter by seller country and shipping availability
-- ⚡ Built-in caching to minimize API rate limits
+- ⚡ Dual data sources: Fast export data for basic searches, live API for advanced features
 - 📊 Display results in table or JSON format
 - 🎯 Advanced filtering (condition, foil, language, set, price range)
+- 🔄 Automatic daily data updates with manual refresh option
 - 📦 Group offers by seller to optimize shipping
 
 ## Prerequisites
@@ -76,19 +78,74 @@ Create a `config.json` file in the root directory:
   "cache": {
     "enabled": true,
     "ttl": 3600
+  },
+  "export": {
+    "enabled": true,
+    "autoUpdate": true
   }
 }
 ```
 
 ### Configuration Options
 
-- `credentials`: Your Cardmarket API credentials (required)
+- `credentials`: Your Cardmarket API credentials (required for live API mode)
 - `preferences.country`: Your country code for shipping calculations (ISO 3166-1 alpha-2)
 - `preferences.currency`: Preferred currency display (EUR, USD, GBP, etc.)
 - `preferences.language`: Interface language
 - `preferences.maxResults`: Default maximum number of results
 - `cache.enabled`: Enable/disable response caching (default: true)
 - `cache.ttl`: Cache time-to-live in seconds (default: 3600)
+- `export.enabled`: Enable export data mode (default: true)
+- `export.autoUpdate`: Automatically download export data if missing or old (default: true)
+
+## Data Sources
+
+This tool supports two data sources:
+
+### Export Data (Default)
+- **What it is:** Daily snapshots of all MTG products and price trends from Cardmarket
+- **Size:** ~41MB (18MB products + 23MB price guide)
+- **Update frequency:** Daily (automated download on first run, manual updates available)
+- **Storage:** Local `./data` directory (gitignored)
+- **Advantages:**
+  - ⚡ Extremely fast searches (no API calls)
+  - 🆓 No API rate limits
+  - 📊 Includes price trends and statistics
+- **Limitations:**
+  - No individual seller offers
+  - No condition/foil/signed filtering
+  - No real-time shipping calculations
+  - Data refreshed daily (may be slightly outdated)
+
+### Live API (On-Demand)
+- **What it is:** Real-time queries to Cardmarket's API
+- **Advantages:**
+  - 🔴 Live seller offers with real-time availability
+  - 🎯 Full filtering (condition, foil, signed, altered)
+  - 📦 Real shipping cost estimates
+  - ⚡ Most up-to-date prices
+- **Limitations:**
+  - Requires API credentials
+  - Subject to rate limits (30,000 requests/day)
+  - Slower than export mode
+
+### Automatic Mode Switching
+The tool automatically chooses the best data source:
+
+**Uses Export Data when:**
+- Basic card searches (name only)
+- Price range filtering
+- No shipping calculations needed
+- Export mode is enabled (default)
+
+**Switches to Live API when:**
+- `--include-shipping` flag is used
+- Condition filtering (`--condition NM`)
+- Special card attributes (`--foil`, `--signed`, `--altered`)
+- Country filtering (`--filter-country`)
+- Seller grouping (`--group-by-seller`)
+- `--live` flag is explicitly set
+- Export mode is disabled
 
 ## Usage
 
@@ -100,20 +157,38 @@ pnpm run build
 
 ### Search Commands
 
-**Basic search:**
+**Basic search (uses export data):**
 ```bash
 pnpm start search "Black Lotus"
 ```
 
+**Update export data:**
+```bash
+# Update if data is old (>24 hours)
+pnpm start update-data
+
+# Force update even if data is recent
+pnpm start update-data --force
+```
+
+**Force live API mode:**
+```bash
+# Get real-time seller offers
+pnpm start search "Black Lotus" --live
+
+# Live mode with condition filtering
+pnpm start search "Mox Pearl" --live --condition NM
+```
+
 **Search with filters:**
 ```bash
-# Search for Near Mint cards only
+# Search for Near Mint cards (switches to API automatically)
 pnpm start search "Lightning Bolt" --condition NM
 
-# Search for foil cards in English
+# Search for foil cards in English (uses API)
 pnpm start search "Tarmogoyf" --foil --language EN
 
-# Search with price range
+# Search with price range (uses export data)
 pnpm start search "Mox Pearl" --min-price 100 --max-price 500
 
 # Search for specific set
@@ -175,6 +250,7 @@ pnpm start search "Brainstorm" --no-cache
 | `--group-by-seller` | Group offers by seller | boolean |
 | `--sort` | Sort results | price, condition, seller-rating |
 | `--json` | Output in JSON format | boolean |
+| `--live` | Force live API mode instead of export data | boolean |
 | `--no-cache` | Disable caching for this request | boolean |
 | `--max-results` | Maximum results to show | number |
 
@@ -214,6 +290,10 @@ cardmarket-cli/
 │   │   ├── client.ts            # API client with OAuth
 │   │   ├── auth.ts              # OAuth signature generation
 │   │   └── endpoints.ts         # API endpoint methods
+│   ├── export/
+│   │   ├── types.ts             # Export data TypeScript types
+│   │   ├── downloader.ts        # Export file downloader
+│   │   └── searcher.ts          # Export data searcher
 │   ├── commands/
 │   │   ├── search.ts            # Search command implementation
 │   │   ├── help.ts              # Help command
@@ -222,6 +302,9 @@ cardmarket-cli/
 │       ├── shipping.ts          # Shipping cost calculations
 │       ├── formatter.ts         # Output formatting
 │       └── cache.ts             # Caching utilities
+├── data/                        # Export data files (gitignored)
+│   ├── products_singles_1.json
+│   └── price_guide_1.json
 ├── config.example.json          # Example configuration
 ├── package.json
 ├── tsconfig.json
@@ -263,11 +346,22 @@ This tool includes built-in caching to minimize API calls. Cache is enabled by d
 
 ## Troubleshooting
 
+**"Failed to load export data" error:**
+- Run `pnpm start update-data` to download export files
+- Check internet connection (files are ~41MB total)
+- Verify `./data` directory is writable
+
+**"Export data is more than 24 hours old" warning:**
+- Run `pnpm start update-data` to refresh data
+- Or use `--live` flag to bypass export data
+
 **"Invalid OAuth signature" error:**
 - Verify your API credentials in `config.json`
 - Ensure your system clock is synchronized (OAuth uses timestamps)
+- Note: Only needed for live API mode, not export mode
 
 **"Rate limit exceeded" error:**
+- Use export data mode (default) to avoid rate limits
 - Enable caching (default)
 - Reduce the number of requests
 - Wait for the rate limit to reset (daily)
@@ -276,6 +370,7 @@ This tool includes built-in caching to minimize API calls. Cache is enabled by d
 - Check card name spelling
 - Try without filters first
 - Some cards may not be available in the specified condition/language
+- Export data only includes singles, not all products
 
 ## License
 

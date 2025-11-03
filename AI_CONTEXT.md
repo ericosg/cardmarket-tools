@@ -39,6 +39,8 @@ A CLI tool for searching Magic: The Gathering cards on Cardmarket (EU marketplac
 - Full TypeScript implementation with strict type checking
 - OAuth 1.0a authentication with signature generation
 - Cardmarket API integration (v2.0)
+- **Export data integration (daily Cardmarket export files)**
+- **Intelligent mode switching (export vs API)**
 - Product search with multiple filters
 - Article (seller offer) retrieval
 - Shipping cost estimation by country
@@ -46,7 +48,7 @@ A CLI tool for searching Magic: The Gathering cards on Cardmarket (EU marketplac
 - Table and JSON output formats
 - CLI with Commander.js
 - Configuration file system
-- Comprehensive documentation (README, API_DOCUMENTATION, FUTURE_FEATURES)
+- Comprehensive documentation (README, API_DOCUMENTATION, FUTURE_FEATURES, AI_CONTEXT)
 - Build system (TypeScript compiler)
 - Successfully builds and runs
 
@@ -59,23 +61,31 @@ src/
 │   ├── auth.ts          # OAuth signature generation
 │   ├── client.ts        # HTTP client with caching & redirects
 │   └── endpoints.ts     # API method wrappers
+├── export/
+│   ├── types.ts         # Export data TypeScript interfaces
+│   ├── downloader.ts    # Export file downloader & manager
+│   └── searcher.ts      # Export data searcher & loader
 ├── commands/
 │   ├── types.ts         # Shared TypeScript interfaces
-│   ├── search.ts        # Search command logic
+│   ├── search.ts        # Search command logic (export + API)
 │   └── help.ts          # Help display
 ├── utils/
 │   ├── cache.ts         # In-memory cache with TTL
-│   ├── formatter.ts     # Output formatting (table/JSON)
+│   ├── formatter.ts     # Output formatting (table/JSON/export)
 │   └── shipping.ts      # Shipping cost calculator
 ├── config.ts            # Configuration loader/validator
 └── index.ts             # CLI entry point
 ```
 
 #### Key Files Outside src/
+- `data/` - Export data files directory (gitignored)
+  - `products_singles_1.json` - ~18MB product catalog
+  - `price_guide_1.json` - ~23MB price guide
 - `config.example.json` - Template for user configuration
 - `README.md` - User-facing documentation
-- `API_DOCUMENTATION.md` - Cardmarket API reference
+- `API_DOCUMENTATION.md` - Cardmarket API & export data reference
 - `FUTURE_FEATURES.md` - Planned enhancements
+- `AI_CONTEXT.md` - This document
 - `package.json` - Dependencies and scripts
 - `tsconfig.json` - TypeScript configuration
 
@@ -129,11 +139,53 @@ Important constants:
 - **EU Countries:** Full list of 27 EU member states defined
 - **Note:** Real shipping costs would require additional API calls to seller shipping methods
 
+### Export Data System (src/export/)
+
+**Export Downloader (downloader.ts):**
+- **Purpose:** Download and manage daily Cardmarket export files
+- **URLs:**
+  - Products: `https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_1.json`
+  - Price Guide: `https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json`
+- **Features:**
+  - Downloads files to `./data` directory
+  - Checks file freshness (24-hour threshold)
+  - Streaming download for large files (~41MB total)
+  - Automatic timestamp tracking via `createdAt` field
+  - Manual force-download option
+- **Key Methods:**
+  - `downloadAll(force)` - Download both files if needed
+  - `loadProducts()` - Load products from disk
+  - `loadPriceGuide()` - Load price guide from disk
+  - `needsUpdate()` - Check if data is >24 hours old
+  - `getDataStatus()` - Get data age and status
+
+**Export Searcher (searcher.ts):**
+- **Purpose:** Search and query export data in memory
+- **Data Structure:** Products array + Map<idProduct, PriceGuideEntry>
+- **Features:**
+  - O(1) price guide lookups via Map
+  - O(n) product name searches (case-insensitive)
+  - Exact and partial matching
+  - Price range filtering
+  - Result limiting and sorting
+- **Key Methods:**
+  - `load()` - Load export data into memory
+  - `search(term, options)` - Search products by name
+  - `getById(idProduct)` - Get product + price by ID
+  - `getStatus()` - Get data freshness status
+
+**Export Types (types.ts):**
+- **PriceGuideEntry:** avg, low, trend, avg1/7/30, foil prices
+- **ProductEntry:** idProduct, name, categoryName, expansionName, rarity
+- **ExportSearchResult:** Combines product + optional price guide
+- **ExportDataStatus:** Loaded flags, dates, ages, needsUpdate
+
 ### Output Formatting (src/utils/formatter.ts)
 - **Libraries:** chalk (v4.1.2) for colors, cli-table3 (v0.6.5) for tables
 - **Formats:**
-  - Table: Colored conditions, seller badges, star ratings
-  - JSON: Structured data export
+  - API Table: Colored conditions, seller badges, star ratings
+  - Export Table: Card name, expansion, trend/low/avg prices, foil prices
+  - JSON: Structured data export (API or export)
   - Grouped: Shows articles grouped by seller with combined shipping
 - **Color Coding:**
   - MT/NM: green
@@ -141,6 +193,10 @@ Important constants:
   - GD/LP: yellow
   - PL/PO: red
   - Commercial sellers: blue [Pro] badge
+- **Export Display:**
+  - Shows data source and age (e.g., "Export data (updated 2025-11-03, 12h old)")
+  - Price columns: Trend, Low, Avg
+  - Optional foil trend column if available
 
 ### Configuration (src/config.ts)
 - **File:** `config.json` (gitignored)
@@ -163,16 +219,26 @@ Important constants:
     "cache": {
       "enabled": true,
       "ttl": 3600
+    },
+    "export": {
+      "enabled": true,
+      "autoUpdate": true
     }
   }
   ```
 - **Validation:** Strict validation with helpful error messages, checks for placeholder values
+- **Note:** Credentials only required when using live API mode, not for export mode
 
 ### CLI (src/index.ts)
 - **Framework:** Commander.js (v11.1.0)
 - **Commands:**
-  - `search <card-name>` - Main search command with ~20 options
+  - `search <card-name>` - Main search command with ~20 options (export/API)
+  - `update-data` - Download/update export data files
   - `help` - Display detailed help
+- **Key Options:**
+  - `--live` - Force live API mode instead of export
+  - `--include-shipping` - Auto-switches to API mode
+  - Condition/foil/signed filters - Auto-switch to API mode
 - **Behavior:** Exits after each command (as required)
 - **Error Handling:** Formatted errors with exit code 1
 
@@ -190,17 +256,37 @@ Important constants:
 - Specific error messages for common API issues
 
 ### Data Flow
+
+**Export Mode (Default):**
+1. CLI parses arguments → SearchOptions
+2. Load config.json → Config
+3. SearchCommand.shouldUseExport() → true
+4. SearchCommand executes:
+   - Initialize ExportSearcher (if needed)
+   - Load export data from ./data into memory
+   - Search products by name (case-insensitive)
+   - Filter by price range (if specified)
+   - Sort by price trend
+   - Limit results
+   - Format and output (export table/JSON)
+
+**API Mode (Advanced Features):**
 1. CLI parses arguments → SearchOptions
 2. Load config.json → Config
 3. Create CardmarketClient with credentials
 4. Create CardmarketAPI wrapper
-5. SearchCommand executes:
+5. SearchCommand.shouldUseExport() → false
+6. SearchCommand executes:
    - Search products by name
    - For each product, get articles
    - Filter by user criteria
    - Enrich with shipping if requested
    - Sort and limit results
-   - Format and output
+   - Format and output (API table/JSON)
+
+**Mode Switching Logic:**
+- Uses Export if: basic search, no special filters, export enabled
+- Uses API if: --live, --include-shipping, --condition, --foil, --signed, --altered, --filter-country, --group-by-seller
 
 ### API Response Normalization
 - API sometimes returns single object instead of array
@@ -240,30 +326,46 @@ Important constants:
 
 ## Known Limitations & Gotchas
 
-1. **Shipping Costs are Estimates**
+1. **Export Data Limitations**
+   - Only includes MTG singles (no sealed products, accessories)
+   - No individual seller offers or availability
+   - No condition/foil/signed filtering capability
+   - Updated daily, may be slightly outdated
+   - ~41MB file size (requires initial download)
+
+2. **Shipping Costs are Estimates**
    - Real shipping costs require querying seller shipping methods
    - Current implementation uses hardcoded estimates by country
    - Good enough for comparison but not exact
+   - Only available in API mode (--include-shipping)
 
-2. **Rate Limits**
+3. **Rate Limits**
    - Standard: 30,000 requests/day
    - Professional: 100,000 requests/day
    - Caching mitigates this significantly
+   - Export mode completely bypasses rate limits
 
-3. **OAuth Signature with Redirects**
+4. **OAuth Signature with Redirects**
    - 307 redirects require signature recalculation
    - Implemented correctly in client.ts
    - Critical for /products/find endpoint
+   - Only relevant in API mode
 
-4. **API Quirks**
+5. **API Quirks**
    - Responses sometimes single object vs array
    - Always normalized in endpoints.ts
    - Some fields optional (check for undefined)
 
-5. **Language/Expansion Filtering**
+6. **Language/Expansion Filtering**
    - Language filter works via idLanguage parameter
    - Set filtering requires idExpansion (not implemented yet)
    - --set option currently stored but not used
+
+7. **Mode Switching**
+   - Tool automatically switches from export to API when needed
+   - Some filter combinations may unexpectedly trigger API mode
+   - Use --live to explicitly force API mode
+   - Export mode requires no credentials
 
 ## Testing Considerations
 
@@ -288,24 +390,25 @@ pnpm start search "<card-name>" [options]
 ```
 
 ### Available Options
-| Option | Type | Description |
-|--------|------|-------------|
-| `--condition <code>` | string | MT, NM, EX, GD, LP, PL, PO |
-| `--foil` | boolean | Only foil cards |
-| `--signed` | boolean | Only signed cards |
-| `--altered` | boolean | Only altered cards |
-| `--language <code>` | string | EN, DE, FR, IT, ES, JP, etc. |
-| `--set <code>` | string | Expansion code (stored but not used yet) |
-| `--min-price <n>` | number | Minimum price filter |
-| `--max-price <n>` | number | Maximum price filter |
-| `--include-shipping` | boolean | Calculate and show shipping |
-| `--filter-country` | boolean | Only sellers shipping to user's country |
-| `--top <n>` | number | Show only top N offers |
-| `--group-by-seller` | boolean | Group articles by seller |
-| `--sort <option>` | string | price, condition, seller-rating |
-| `--json` | boolean | Output JSON instead of table |
-| `--no-cache` | boolean | Bypass cache for this request |
-| `--max-results <n>` | number | Override config maxResults |
+| Option | Type | Description | Mode |
+|--------|------|-------------|------|
+| `--condition <code>` | string | MT, NM, EX, GD, LP, PL, PO | Forces API |
+| `--foil` | boolean | Only foil cards | Forces API |
+| `--signed` | boolean | Only signed cards | Forces API |
+| `--altered` | boolean | Only altered cards | Forces API |
+| `--language <code>` | string | EN, DE, FR, IT, ES, JP, etc. | Both |
+| `--set <code>` | string | Expansion code (stored but not used yet) | Both |
+| `--min-price <n>` | number | Minimum price filter | Both |
+| `--max-price <n>` | number | Maximum price filter | Both |
+| `--include-shipping` | boolean | Calculate and show shipping | Forces API |
+| `--filter-country` | boolean | Only sellers shipping to user's country | Forces API |
+| `--top <n>` | number | Show only top N offers | Both |
+| `--group-by-seller` | boolean | Group articles by seller | Forces API |
+| `--sort <option>` | string | price, condition, seller-rating | Both |
+| `--json` | boolean | Output JSON instead of table | Both |
+| `--live` | boolean | Force live API mode | Forces API |
+| `--no-cache` | boolean | Bypass cache for this request | API only |
+| `--max-results <n>` | number | Override config maxResults | Both |
 
 ## Future Development Roadmap
 
@@ -445,9 +548,54 @@ The project is considered "working" when:
 
 ## Current Version: 1.0.0
 
-**Status:** Production ready, fully functional pending API credentials
+**Status:** Production ready, fully functional
 
 **Last Updated:** 2025-11-03
+
+---
+
+## Recent Updates
+
+### Export Data Feature (2025-11-03)
+Major update adding dual-mode data source capability:
+
+**What Changed:**
+- Added `src/export/` directory with downloader, searcher, and types
+- Modified search command to intelligently switch between export and API
+- Added `update-data` command for manual data refresh
+- Added `--live` flag to force API mode
+- Updated all formatters to support export data display
+- Modified configuration to include export settings
+- Updated all documentation
+
+**New Files:**
+- `src/export/types.ts` - Export data interfaces
+- `src/export/downloader.ts` - Download manager for export files
+- `src/export/searcher.ts` - In-memory search engine
+
+**Modified Files:**
+- `src/commands/search.ts` - Added mode switching logic
+- `src/commands/types.ts` - Added export config and --live option
+- `src/utils/formatter.ts` - Added export table/JSON formatting
+- `src/config.ts` - Added export configuration validation
+- `src/index.ts` - Added update-data command and --live flag
+- `src/commands/help.ts` - Updated help text
+- `config.example.json` - Added export section
+- `.gitignore` - Added data/ directory
+
+**Benefits:**
+- No API credentials needed for basic searches
+- Bypasses rate limits for price lookups
+- Much faster searches (local data)
+- Still supports full API features when needed
+- Automatic mode switching for seamless UX
+
+**Technical Notes:**
+- Export files stored in `./data/` (gitignored)
+- Files downloaded from S3: ~41MB total
+- 24-hour freshness check
+- Map-based price guide for O(1) lookups
+- Streaming downloads for large files
 
 ---
 
@@ -457,11 +605,11 @@ When picking up this project:
 
 1. Read this entire document first
 2. Check FUTURE_FEATURES.md for what's planned
-3. Review recent changes (if any) in git history
+3. Review recent changes (above) or git history
 4. Understand the user's request
 5. Identify which files need modification
 6. Make changes following patterns established here
 7. Update relevant documentation
 8. Test if possible (or provide testing instructions)
 
-Remember: This tool exits after each run, uses pnpm, and requires valid Cardmarket API credentials to actually search for cards.
+Remember: This tool exits after each run, uses pnpm, and now supports both export data (default, no credentials needed) and live API mode (requires credentials).

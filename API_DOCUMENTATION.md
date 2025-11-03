@@ -25,6 +25,103 @@ The Cardmarket API 2.0 provides programmatic access to the Cardmarket marketplac
 
 ---
 
+## Export Data Files (Alternative to API)
+
+Cardmarket provides daily export files as an alternative to API calls for basic product and price information.
+
+### Export File Endpoints
+
+**Products Catalog (Singles):**
+```
+https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_1.json
+```
+- Size: ~18MB
+- Update frequency: Daily
+- Contains: All Magic: The Gathering singles (product catalog)
+
+**Price Guide:**
+```
+https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json
+```
+- Size: ~23MB
+- Update frequency: Daily
+- Contains: Price trends, averages, low/high prices for all products
+
+### Export Data Structure
+
+**Products File:**
+```json
+{
+  "createdAt": "2025-11-03T00:00:00+0000",
+  "products": [
+    {
+      "idProduct": 12345,
+      "name": "Black Lotus",
+      "categoryName": "Magic Single",
+      "expansionName": "Limited Edition Alpha",
+      "number": "0",
+      "rarity": "Rare"
+    }
+  ]
+}
+```
+
+**Price Guide File:**
+```json
+{
+  "createdAt": "2025-11-03T00:00:00+0000",
+  "priceGuides": [
+    {
+      "idProduct": 12345,
+      "idCategory": 1,
+      "avg": 16000.00,
+      "low": 12000.00,
+      "trend": 15500.00,
+      "avg1": 15800.00,
+      "avg7": 15700.00,
+      "avg30": 15600.00,
+      "avg-foil": null,
+      "low-foil": null,
+      "trend-foil": null
+    }
+  ]
+}
+```
+
+### Export vs API Comparison
+
+| Feature | Export Data | Live API |
+|---------|-------------|----------|
+| **Speed** | Very fast (local) | Slower (network) |
+| **Rate limits** | None | 30,000/day |
+| **Authentication** | Not required | Required (OAuth) |
+| **Data freshness** | Daily updates | Real-time |
+| **Product info** | ✅ Yes | ✅ Yes |
+| **Price trends** | ✅ Yes | ✅ Yes |
+| **Seller offers** | ❌ No | ✅ Yes |
+| **Condition filtering** | ❌ No | ✅ Yes |
+| **Foil/Signed** | ❌ No | ✅ Yes |
+| **Shipping costs** | ❌ No | ✅ Yes |
+| **File size** | ~41MB total | N/A |
+
+### When to Use Each
+
+**Use Export Data for:**
+- Basic card searches and price checks
+- Price trend analysis
+- Offline access
+- High-volume searches without rate limits
+- Applications that don't need seller-specific data
+
+**Use Live API for:**
+- Real-time seller offers
+- Condition/foil/signed filtering
+- Shipping cost calculations
+- Seller reputation and ratings
+- Making purchases (requires authenticated endpoints)
+
+---
+
 ## Authentication
 
 Cardmarket API uses **OAuth 1.0a** authentication. All requests must include a signed OAuth Authorization header.
