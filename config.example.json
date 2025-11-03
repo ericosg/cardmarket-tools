@@ -14,5 +14,9 @@
   "cache": {
     "enabled": true,
     "ttl": 3600
+  },
+  "export": {
+    "enabled": true,
+    "autoUpdate": true
   }
 }

@@ -1,6 +1,7 @@
 import Table from 'cli-table3';
 import chalk from 'chalk';
 import { EnrichedArticle, Product, SearchResult } from '../commands/types';
+import { ExportSearchResult } from '../export/types';
 
 /**
  * Output formatter for search results
@@ -274,5 +275,80 @@ export class Formatter {
     }
 
     return output.join('\n');
+  }
+
+  /**
+   * Format export search results as a table
+   * @param results Export search results
+   * @param options Formatting options
+   */
+  static formatExportTable(
+    results: ExportSearchResult[],
+    options: {
+      currency?: string;
+      dataSource?: string;
+    } = {}
+  ): string {
+    if (results.length === 0) {
+      return chalk.yellow('No results found.');
+    }
+
+    const { currency = 'EUR', dataSource } = options;
+
+    const output: string[] = [];
+
+    // Data source indicator
+    if (dataSource) {
+      output.push('');
+      output.push(chalk.gray(`Data source: ${dataSource}`));
+      output.push('');
+    }
+
+    // Create table
+    const table = new Table({
+      head: [
+        chalk.bold('Card Name'),
+        chalk.bold('Expansion'),
+        chalk.bold('Trend'),
+        chalk.bold('Low'),
+        chalk.bold('Avg'),
+        chalk.bold('Foil Trend'),
+      ].map((h) => h),
+      style: {
+        head: [],
+        border: [],
+      },
+      colWidths: [40, 20, 12, 12, 12, 12],
+    });
+
+    for (const result of results) {
+      const { product, priceGuide } = result;
+
+      const row: string[] = [
+        product.name,
+        product.categoryName || 'N/A',
+        priceGuide ? Formatter.formatPrice(priceGuide.trend, currency) : 'N/A',
+        priceGuide ? Formatter.formatPrice(priceGuide.low, currency) : 'N/A',
+        priceGuide ? Formatter.formatPrice(priceGuide.avg, currency) : 'N/A',
+        priceGuide && priceGuide['trend-foil'] !== null
+          ? Formatter.formatPrice(priceGuide['trend-foil'], currency)
+          : 'N/A',
+      ];
+
+      table.push(row);
+    }
+
+    output.push(table.toString());
+
+    return output.join('\n');
+  }
+
+  /**
+   * Format export search results as JSON
+   * @param results Export search results
+   * @returns JSON string
+   */
+  static formatExportJSON(results: ExportSearchResult[]): string {
+    return JSON.stringify(results, null, 2);
   }
 }

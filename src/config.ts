@@ -119,6 +119,17 @@ export class ConfigLoader {
       throw new ConfigError('cache.ttl must be a number');
     }
 
+    // Validate export settings (optional)
+    const exportConfig = cfg.export as Record<string, unknown> || {};
+
+    if (exportConfig.enabled !== undefined && typeof exportConfig.enabled !== 'boolean') {
+      throw new ConfigError('export.enabled must be a boolean');
+    }
+
+    if (exportConfig.autoUpdate !== undefined && typeof exportConfig.autoUpdate !== 'boolean') {
+      throw new ConfigError('export.autoUpdate must be a boolean');
+    }
+
     // Build validated config with defaults
     const validatedConfig: Config = {
       credentials: {
@@ -136,6 +147,10 @@ export class ConfigLoader {
       cache: {
         enabled: cache.enabled !== undefined ? (cache.enabled as boolean) : true,
         ttl: (cache.ttl as number) || 3600,
+      },
+      export: {
+        enabled: exportConfig.enabled !== undefined ? (exportConfig.enabled as boolean) : true,
+        autoUpdate: exportConfig.autoUpdate !== undefined ? (exportConfig.autoUpdate as boolean) : true,
       },
     };
 

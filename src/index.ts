@@ -6,6 +6,7 @@ import { SearchCommand } from './commands/search';
 import { HelpCommand } from './commands/help';
 import { Formatter } from './utils/formatter';
 import { SearchOptions, CardCondition, SortOption } from './commands/types';
+import { ExportDownloader } from './export/downloader';
 
 const program = new Command();
 
@@ -34,6 +35,7 @@ program
   .option('--json', 'Output in JSON format')
   .option('--no-cache', 'Disable caching for this request')
   .option('--max-results <number>', 'Maximum number of results', parseInt)
+  .option('--live', 'Force live API data instead of export')
   .action(async (cardName: string, options: Record<string, unknown>) => {
     try {
       // Load configuration
@@ -57,6 +59,7 @@ program
         json: options.json as boolean | undefined,
         noCache: options.cache === false,
         maxResults: options.maxResults as number | undefined,
+        live: options.live as boolean | undefined,
       };
 
       // Validate options
@@ -65,6 +68,42 @@ program
       // Execute search
       const searchCommand = new SearchCommand(config);
       await searchCommand.execute(cardName, searchOptions);
+
+    } catch (error) {
+      console.error(Formatter.formatError(error));
+      process.exit(1);
+    }
+  });
+
+// Update-data command
+program
+  .command('update-data')
+  .description('Download/update export data files')
+  .option('-f, --force', 'Force download even if data is recent')
+  .action(async (options: Record<string, unknown>) => {
+    try {
+      const force = options.force as boolean || false;
+
+      console.log('Updating export data...\n');
+
+      const result = await ExportDownloader.downloadAll(force);
+
+      if (result.productsDownloaded) {
+        console.log('✓ Products catalog updated');
+      } else {
+        console.log('✓ Products catalog is up to date');
+      }
+
+      if (result.priceGuideDownloaded) {
+        console.log('✓ Price guide updated');
+      } else {
+        console.log('✓ Price guide is up to date');
+      }
+
+      const status = ExportDownloader.getDataStatus();
+      console.log(`\nData status:`);
+      console.log(`  Products age: ${status.productsAge ? Math.floor(status.productsAge) + 'h' : 'N/A'}`);
+      console.log(`  Price guide age: ${status.priceGuideAge ? Math.floor(status.priceGuideAge) + 'h' : 'N/A'}`);
 
     } catch (error) {
       console.error(Formatter.formatError(error));

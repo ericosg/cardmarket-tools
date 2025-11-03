@@ -9,6 +9,7 @@ export class HelpCommand {
 
     console.log(chalk.bold('USAGE:'));
     console.log('  pnpm start search <card-name> [options]');
+    console.log('  pnpm start update-data [-f|--force]');
     console.log('  pnpm start help\n');
 
     console.log(chalk.bold('EXAMPLES:'));
@@ -26,6 +27,12 @@ export class HelpCommand {
 
     console.log('  # Export results as JSON');
     console.log('  pnpm start search "Mox Pearl" --json > results.json\n');
+
+    console.log('  # Force live API data instead of export');
+    console.log('  pnpm start search "Mana Crypt" --live\n');
+
+    console.log('  # Update export data');
+    console.log('  pnpm start update-data\n');
 
     console.log(chalk.bold('OPTIONS:'));
     console.log(chalk.yellow('  Filtering Options:'));
@@ -49,8 +56,11 @@ export class HelpCommand {
     console.log('    --json                  Output in JSON format');
     console.log('    --max-results <number>  Maximum number of results\n');
 
+    console.log(chalk.yellow('  Data Source Options:'));
+    console.log('    --live                  Force live API data (default: use export)');
+    console.log('    --no-cache              Disable API caching for this request\n');
+
     console.log(chalk.yellow('  Other Options:'));
-    console.log('    --no-cache              Disable caching for this request');
     console.log('    --help, -h              Show this help message\n');
 
     console.log(chalk.bold('CONDITION CODES:'));
@@ -61,6 +71,18 @@ export class HelpCommand {
     console.log('  LP - Light Played  Noticeable wear');
     console.log('  PL - Played        Heavy wear');
     console.log('  PO - Poor          Severe wear, damaged\n');
+
+    console.log(chalk.bold('DATA SOURCES:'));
+    console.log('  By default, searches use cached export data (updated daily)');
+    console.log('  Export data includes: card names, prices, trends');
+    console.log('  Export data does NOT include: individual seller offers, conditions');
+    console.log('  Use --live for real-time seller offers and shipping calculations');
+    console.log('  Use --include-shipping to automatically use live API data\n');
+
+    console.log(chalk.bold('COMMANDS:'));
+    console.log('  search <name>        Search for cards');
+    console.log('  update-data          Download/update export data files');
+    console.log('  help                 Show this help message\n');
 
     console.log(chalk.bold('CONFIGURATION:'));
     console.log('  Configuration file: config.json');

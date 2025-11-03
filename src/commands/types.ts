@@ -4,6 +4,7 @@ export interface Config {
   credentials: Credentials;
   preferences: Preferences;
   cache: CacheConfig;
+  export: ExportConfig;
 }
 
 export interface Credentials {
@@ -25,6 +26,11 @@ export interface CacheConfig {
   ttl: number;
 }
 
+export interface ExportConfig {
+  enabled: boolean;
+  autoUpdate: boolean;
+}
+
 export interface SearchOptions {
   condition?: CardCondition;
   foil?: boolean;
@@ -42,6 +48,7 @@ export interface SearchOptions {
   json?: boolean;
   noCache?: boolean;
   maxResults?: number;
+  live?: boolean; // Force API usage instead of export data
 }
 
 export type CardCondition = 'MT' | 'NM' | 'EX' | 'GD' | 'LP' | 'PL' | 'PO';
