@@ -1,0 +1,18 @@
+{
+  "credentials": {
+    "appToken": "your-app-token-here",
+    "appSecret": "your-app-secret-here",
+    "accessToken": "your-access-token-here",
+    "accessTokenSecret": "your-access-token-secret-here"
+  },
+  "preferences": {
+    "country": "DE",
+    "currency": "EUR",
+    "language": "en",
+    "maxResults": 20
+  },
+  "cache": {
+    "enabled": true,
+    "ttl": 3600
+  }
+}
