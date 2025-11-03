@@ -110,13 +110,18 @@ export class Formatter {
    * @param currency Currency code
    * @returns Formatted price string
    */
-  private static formatPrice(price: number, currency: string): string {
+  private static formatPrice(price: number | null | undefined, currency: string): string {
     const symbols: Record<string, string> = {
       'EUR': '€',
       'USD': '$',
       'GBP': '£',
       'JPY': '¥',
     };
+
+    // Handle null/undefined values
+    if (price === null || price === undefined) {
+      return 'N/A';
+    }
 
     const symbol = symbols[currency] || currency;
     return `${price.toFixed(2)} ${symbol}`;
