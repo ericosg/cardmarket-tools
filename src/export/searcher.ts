@@ -11,6 +11,8 @@ import {
  */
 export class ExportSearcher {
   private products: ProductEntry[] = [];
+  private singlesProducts: ProductEntry[] = [];
+  private nonsinglesProducts: ProductEntry[] = [];
   private priceGuide: Map<number, PriceGuideEntry> = new Map();
   private productsLoaded: boolean = false;
   private priceGuideLoaded: boolean = false;
@@ -27,20 +29,23 @@ export class ExportSearcher {
     // Load singles
     const singlesData = ExportDownloader.loadProductsSingles();
     if (singlesData) {
-      this.products = singlesData.products;
+      this.singlesProducts = singlesData.products;
       this.productsDate = new Date(singlesData.createdAt);
     }
 
-    // Load non-singles and merge
+    // Load non-singles
     const nonsinglesData = ExportDownloader.loadProductsNonsingles();
     if (nonsinglesData) {
-      this.products = [...this.products, ...nonsinglesData.products];
+      this.nonsinglesProducts = nonsinglesData.products;
       // Use the older date for safety
       const nonsinglesDate = new Date(nonsinglesData.createdAt);
       if (!this.productsDate || nonsinglesDate < this.productsDate) {
         this.productsDate = nonsinglesDate;
       }
     }
+
+    // Merge all products for backward compatibility
+    this.products = [...this.singlesProducts, ...this.nonsinglesProducts];
 
     // Mark as loaded if we have at least singles
     if (this.products.length > 0) {
@@ -74,6 +79,7 @@ export class ExportSearcher {
     options: {
       maxResults?: number;
       exact?: boolean;
+      productFilter?: 'singles' | 'nonsingles' | 'both';
     } = {}
   ): ExportSearchResult[] {
     if (!this.productsLoaded) {
@@ -82,9 +88,20 @@ export class ExportSearcher {
 
     const term = searchTerm.toLowerCase().trim();
     const maxResults = options.maxResults || 20;
+    const productFilter = options.productFilter || 'both';
     const results: ExportSearchResult[] = [];
 
-    for (const product of this.products) {
+    // Select the appropriate product array based on filter
+    let productsToSearch: ProductEntry[];
+    if (productFilter === 'singles') {
+      productsToSearch = this.singlesProducts;
+    } else if (productFilter === 'nonsingles') {
+      productsToSearch = this.nonsinglesProducts;
+    } else {
+      productsToSearch = this.products; // 'both'
+    }
+
+    for (const product of productsToSearch) {
       const productName = product.name.toLowerCase();
 
       // Exact match

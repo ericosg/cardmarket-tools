@@ -108,6 +108,7 @@ https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json
 | **Price trends** | ✅ Yes | ✅ Yes |
 | **Default sorting** | ✅ By avg price | ❌ No |
 | **Per-booster pricing** | ✅ Yes | ❌ No |
+| **Product type filtering** | ✅ Yes (singles/nonsingles/both) | ❌ No |
 | **Seller offers** | ❌ No | ✅ Yes |
 | **Condition filtering** | ❌ No | ✅ Yes |
 | **Foil/Signed** | ❌ No | ✅ Yes |
@@ -120,6 +121,7 @@ https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json
 - Basic card searches and price checks
 - Sealed product searches (booster boxes, prerelease packs, bundles)
 - Per-booster price comparisons for sealed products
+- Filtering by product type (singles only, sealed only, or both)
 - Price trend analysis
 - Offline access
 - High-volume searches without rate limits

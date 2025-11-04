@@ -4,6 +4,17 @@ This document tracks planned enhancements and features for the Cardmarket CLI to
 
 ## Recently Implemented ✅
 
+### Product Type Filtering and Dynamic Help (2025-11-04)
+**Status:** ✅ Completed
+
+Product filtering and enhanced help system:
+- Filter searches by singles, sealed products (nonsingles), or both
+- `--product-filter` CLI flag with values: singles, nonsingles, both
+- Config option: `preferences.productFilter` (default: both)
+- Dynamic help text showing all current configuration values
+- Comprehensive configuration display in help command
+- Inline current values for all options (e.g., "current: both", "current: 20")
+
 ### Per-Booster Pricing for Sealed Products (2025-11-04)
 **Status:** ✅ Completed
 

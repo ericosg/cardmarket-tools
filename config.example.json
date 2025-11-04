@@ -13,7 +13,8 @@
     "maxResults": 20,
     "defaultSort": "avg",
     "hideFoil": true,
-    "showPerBooster": true
+    "showPerBooster": true,
+    "productFilter": "both"
   },
   "cache": {
     "enabled": true,

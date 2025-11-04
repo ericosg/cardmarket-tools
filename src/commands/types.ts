@@ -22,6 +22,7 @@ export interface Preferences {
   defaultSort?: ExportSortOption;
   hideFoil?: boolean;
   showPerBooster?: boolean;
+  productFilter?: ProductFilter;
 }
 
 export interface CacheConfig {
@@ -54,11 +55,13 @@ export interface SearchOptions {
   live?: boolean; // Force API usage instead of export data
   showFoil?: boolean; // Override hideFoil preference to show foil column
   hidePerBooster?: boolean; // Override showPerBooster preference to hide per-booster column
+  productFilter?: ProductFilter; // Filter by singles, nonsingles, or both
 }
 
 export type CardCondition = 'MT' | 'NM' | 'EX' | 'GD' | 'LP' | 'PL' | 'PO';
 export type SortOption = 'price' | 'condition' | 'seller-rating';
 export type ExportSortOption = 'trend' | 'low' | 'avg' | 'name' | 'none';
+export type ProductFilter = 'singles' | 'nonsingles' | 'both';
 
 // API Response Types
 

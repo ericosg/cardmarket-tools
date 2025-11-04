@@ -11,10 +11,11 @@ A command-line tool for searching Magic: The Gathering cards on Cardmarket (EU) 
 - 🌍 Filter by seller country and shipping availability
 - ⚡ Dual data sources: Fast export data for basic searches, live API for advanced features
 - 📊 Display results in table or JSON format
-- 🎯 Advanced filtering (condition, foil, language, set, price range)
+- 🎯 Advanced filtering (condition, foil, language, set, price range, product type)
 - 🔄 Automatic daily data updates with manual refresh option
 - 📦 Group offers by seller to optimize shipping
 - 🎨 Customizable display (hide foil column, show/hide per-booster pricing)
+- 🔍 Product type filtering (singles only, sealed products only, or both)
 
 ## Prerequisites
 
@@ -82,7 +83,8 @@ Create a `config.json` file in the root directory:
     "maxResults": 20,
     "defaultSort": "avg",
     "hideFoil": true,
-    "showPerBooster": true
+    "showPerBooster": true,
+    "productFilter": "both"
   },
   "cache": {
     "enabled": true,
@@ -105,6 +107,7 @@ Create a `config.json` file in the root directory:
 - `preferences.defaultSort`: Export data sort order - options: `trend`, `low`, `avg`, `name`, `none` (default: `avg`)
 - `preferences.hideFoil`: Hide foil price column in export results (default: true)
 - `preferences.showPerBooster`: Show per-booster price column for sealed products (default: true)
+- `preferences.productFilter`: Filter products by type - options: `singles`, `nonsingles`, `both` (default: `both`)
 - `cache.enabled`: Enable/disable response caching (default: true)
 - `cache.ttl`: Cache time-to-live in seconds (default: 3600)
 - `export.enabled`: Enable export data mode (default: true)
@@ -216,8 +219,11 @@ pnpm start search "Force of Will" --set ALL
 # Find booster boxes with per-booster cost
 pnpm start search "Edge of Eternities Play Booster Box"
 
-# Compare all sealed products for a set
-pnpm start search "Bloomburrow" --top 10
+# Search only sealed products (no singles)
+pnpm start search "Bloomburrow" --product-filter nonsingles --top 10
+
+# Search only singles (no sealed products)
+pnpm start search "Lightning Bolt" --product-filter singles
 
 # Show foil prices too (overrides hideFoil preference)
 pnpm start search "Foundations Bundle" --show-foil
@@ -286,6 +292,7 @@ pnpm start search "Brainstorm" --no-cache
 | `--max-results` | Maximum results to show | number | from config |
 | `--show-foil` | Show foil price column (overrides hideFoil) | boolean | from config |
 | `--hide-per-booster` | Hide per-booster column (overrides showPerBooster) | boolean | from config |
+| `--product-filter` | Filter by product type | singles, nonsingles, both | both |
 
 ### Help Command
 

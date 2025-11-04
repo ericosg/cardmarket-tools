@@ -139,6 +139,18 @@ export class ConfigLoader {
       throw new ConfigError('preferences.showPerBooster must be a boolean');
     }
 
+    if (preferences.productFilter && typeof preferences.productFilter !== 'string') {
+      throw new ConfigError('preferences.productFilter must be a string');
+    }
+
+    // Validate productFilter value
+    const validProductFilters = ['singles', 'nonsingles', 'both'];
+    if (preferences.productFilter && !validProductFilters.includes(preferences.productFilter as string)) {
+      throw new ConfigError(
+        `preferences.productFilter must be one of: ${validProductFilters.join(', ')}`
+      );
+    }
+
     // Validate cache settings (optional)
     const cache = cfg.cache as Record<string, unknown> || {};
 
@@ -172,6 +184,7 @@ export class ConfigLoader {
         defaultSort: (preferences.defaultSort as 'trend' | 'low' | 'avg' | 'name' | 'none') || 'avg',
         hideFoil: preferences.hideFoil !== undefined ? (preferences.hideFoil as boolean) : true,
         showPerBooster: preferences.showPerBooster !== undefined ? (preferences.showPerBooster as boolean) : true,
+        productFilter: (preferences.productFilter as 'singles' | 'nonsingles' | 'both') || 'both',
       },
       cache: {
         enabled: cache.enabled !== undefined ? (cache.enabled as boolean) : true,

@@ -5,7 +5,7 @@ import { ConfigLoader } from './config';
 import { SearchCommand } from './commands/search';
 import { HelpCommand } from './commands/help';
 import { Formatter } from './utils/formatter';
-import { SearchOptions, CardCondition, SortOption } from './commands/types';
+import { SearchOptions, CardCondition, SortOption, ProductFilter } from './commands/types';
 import { ExportDownloader } from './export/downloader';
 
 const program = new Command();
@@ -38,6 +38,7 @@ program
   .option('--live', 'Force live API data instead of export')
   .option('--show-foil', 'Show foil price column (overrides hideFoil preference)')
   .option('--hide-per-booster', 'Hide per-booster price column (overrides showPerBooster preference)')
+  .option('--product-filter <type>', 'Filter by product type: singles, nonsingles, both (default: both)')
   .action(async (cardName: string, options: Record<string, unknown>) => {
     try {
       // Load configuration
@@ -64,6 +65,7 @@ program
         live: options.live as boolean | undefined,
         showFoil: options.showFoil as boolean | undefined,
         hidePerBooster: options.hidePerBooster as boolean | undefined,
+        productFilter: options.productFilter as ProductFilter | undefined,
       };
 
       // Validate options

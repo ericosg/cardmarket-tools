@@ -221,7 +221,10 @@ Important constants:
       "currency": "EUR",
       "language": "en",
       "maxResults": 20,
-      "defaultSort": "avg (or: trend, low, name, none)"
+      "defaultSort": "avg (or: trend, low, name, none)",
+      "hideFoil": true,
+      "showPerBooster": true,
+      "productFilter": "both (or: singles, nonsingles)"
     },
     "cache": {
       "enabled": true,
@@ -421,6 +424,9 @@ pnpm start search "<card-name>" [options]
 | `--live` | boolean | Force live API mode | Forces API |
 | `--no-cache` | boolean | Bypass cache for this request | API only |
 | `--max-results <n>` | number | Override config maxResults | Both |
+| `--show-foil` | boolean | Show foil price column (overrides hideFoil) | Export only |
+| `--hide-per-booster` | boolean | Hide per-booster column (overrides showPerBooster) | Export only |
+| `--product-filter <type>` | string | Filter by product type: singles, nonsingles, both | Export only |
 
 ## Future Development Roadmap
 
@@ -773,6 +779,78 @@ Per-Booster Price = Average Price ÷ Number of Boosters
 - Lookup performance: O(1) for category check, O(n) for pattern matching (n = small)
 - Compatible with both export and JSON output modes
 - CLI flags take precedence over config preferences
+
+### Product Type Filtering and Dynamic Help (2025-11-04)
+Major enhancement adding product type filtering and dynamic configuration display in help:
+
+**What Changed:**
+- Added `productFilter` option to filter searches by singles, nonsingles (sealed), or both
+- Help command now dynamically displays current configuration settings
+- Updated all CLI flags and config validation to support product filtering
+- Enhanced ExportSearcher to filter product arrays based on type
+
+**New Capabilities:**
+- Filter searches to show only singles: `--product-filter singles`
+- Filter searches to show only sealed products: `--product-filter nonsingles`
+- Default behavior shows both: `--product-filter both` (or omit flag)
+- Configuration option: `preferences.productFilter` (default: "both")
+- Help command shows ALL current config values inline
+
+**Product Filter Implementation:**
+- **Type Definition:** Added `ProductFilter` type: `'singles' | 'nonsingles' | 'both'`
+- **ExportSearcher Changes:**
+  - Stores separate arrays: `singlesProducts`, `nonsinglesProducts`, and merged `products`
+  - Search method accepts `productFilter` parameter
+  - Filters which array to search based on filter value
+- **CLI Integration:**
+  - New flag: `--product-filter <type>`
+  - Validates input against valid options
+  - Passes filter to search execution
+- **Config Integration:**
+  - Added `preferences.productFilter` with default "both"
+  - Full validation with helpful error messages
+  - Config value used as default if CLI flag not provided
+
+**Dynamic Help System:**
+- Help command loads config.json at runtime
+- Shows current values inline: `(current: both)`, `(current: 20)`, etc.
+- New comprehensive "Current configuration" section listing all settings
+- Handles missing config gracefully (shows defaults only)
+- Examples:
+  - `--product-filter <type> Filter by product type (current: both)`
+  - `--max-results <number>  Maximum number of results (current: 20)`
+  - `preferences.productFilter    Product type filter (current: both)`
+
+**Modified Files:**
+- `src/commands/types.ts` - Added ProductFilter type, updated Preferences and SearchOptions
+- `src/export/searcher.ts` - Added separate product arrays and filtering logic
+- `src/commands/search.ts` - Integrated filter into search, added validation
+- `src/index.ts` - Added --product-filter CLI flag
+- `src/config.ts` - Added productFilter validation with defaults
+- `src/commands/help.ts` - Complete rewrite to load and display current config
+- `config.example.json` - Added productFilter field
+- All .md files - Updated with new feature documentation
+
+**Use Cases:**
+- Collectors searching only for singles: `pnpm start search "Lightning Bolt" --product-filter singles`
+- Bulk buyers looking for sealed products: `pnpm start search "Bloomburrow" --product-filter nonsingles`
+- General searches showing everything: default behavior (both)
+- Config preset for specific workflows: set `productFilter` in config.json
+
+**Benefits:**
+- Cleaner search results (no mixing singles with boxes)
+- Faster searches when category is known (searches smaller arrays)
+- Better UX for specialized workflows
+- Help text always shows current settings (no guessing)
+- Self-documenting CLI (users see their config in help)
+
+**Technical Notes:**
+- Product arrays separated at load time (one-time cost)
+- Filter selection is O(1) (array reference swap)
+- Backward compatible (default "both" shows all products)
+- Validation prevents typos and invalid values
+- Help command gracefully handles missing config
+- Config defaults ensure tool works without productFilter set
 
 ---
 

@@ -122,11 +122,13 @@ export class SearchCommand {
 
     const maxResults = options.maxResults ?? this.config.preferences.maxResults;
     const currency = this.config.preferences.currency;
+    const productFilter = options.productFilter ?? this.config.preferences.productFilter ?? 'both';
 
     // Perform search
     const results = this.exportSearcher.search(searchTerm, {
       maxResults,
       exact: false,
+      productFilter,
     });
 
     if (results.length === 0) {
@@ -408,6 +410,17 @@ export class SearchCommand {
         throw new Error(
           `Invalid sort option: ${options.sort}. ` +
           `Valid values: ${validSorts.join(', ')}`
+        );
+      }
+    }
+
+    // Validate product filter
+    if (options.productFilter) {
+      const validFilters = ['singles', 'nonsingles', 'both'];
+      if (!validFilters.includes(options.productFilter)) {
+        throw new Error(
+          `Invalid product filter: ${options.productFilter}. ` +
+          `Valid values: ${validFilters.join(', ')}`
         );
       }
     }
