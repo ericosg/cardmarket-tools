@@ -77,7 +77,8 @@ Create a `config.json` file in the root directory:
     "country": "DE",
     "currency": "EUR",
     "language": "en",
-    "maxResults": 20
+    "maxResults": 20,
+    "defaultSort": "avg"
   },
   "cache": {
     "enabled": true,
@@ -96,7 +97,8 @@ Create a `config.json` file in the root directory:
 - `preferences.country`: Your country code for shipping calculations (ISO 3166-1 alpha-2)
 - `preferences.currency`: Preferred currency display (EUR, USD, GBP, etc.)
 - `preferences.language`: Interface language
-- `preferences.maxResults`: Default maximum number of results
+- `preferences.maxResults`: Default maximum number of results (default: 20)
+- `preferences.defaultSort`: Export data sort order - options: `trend`, `low`, `avg`, `name`, `none` (default: `avg`)
 - `cache.enabled`: Enable/disable response caching (default: true)
 - `cache.ttl`: Cache time-to-live in seconds (default: 3600)
 - `export.enabled`: Enable export data mode (default: true)
@@ -108,13 +110,17 @@ This tool supports two data sources:
 
 ### Export Data (Default)
 - **What it is:** Daily snapshots of all MTG products and price trends from Cardmarket
-- **Size:** ~41MB (18MB products + 23MB price guide)
+- **Includes:** Singles AND sealed products (booster boxes, prerelease packs, bundles, etc.)
+- **Size:** ~41MB total (18MB singles + ~23MB sealed products + 23MB price guide)
 - **Update frequency:** Daily (automated download on first run, manual updates available)
 - **Storage:** Local `./data` directory (gitignored)
+- **Default sorting:** By average price (ascending) - configurable in config.json
 - **Advantages:**
   - ⚡ Extremely fast searches (no API calls)
   - 🆓 No API rate limits
   - 📊 Includes price trends and statistics
+  - 🎁 Includes sealed products (boosters, boxes, packs)
+  - 📈 Smart sorting (cheapest options first)
 - **Limitations:**
   - No individual seller offers
   - No condition/foil/signed filtering
@@ -374,7 +380,7 @@ This tool includes built-in caching to minimize API calls. Cache is enabled by d
 - Check card name spelling
 - Try without filters first
 - Some cards may not be available in the specified condition/language
-- Export data only includes singles, not all products
+- Export data includes singles and sealed products, but not all product types
 
 ## License
 

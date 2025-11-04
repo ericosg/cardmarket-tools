@@ -39,13 +39,21 @@ https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_
 - Update frequency: Daily
 - Contains: All Magic: The Gathering singles (product catalog)
 
+**Products Catalog (Sealed Products):**
+```
+https://downloads.s3.cardmarket.com/productCatalog/productList/products_nonsingles_1.json
+```
+- Size: ~23MB
+- Update frequency: Daily
+- Contains: All Magic: The Gathering sealed products (booster boxes, prerelease packs, bundles, etc.)
+
 **Price Guide:**
 ```
 https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json
 ```
 - Size: ~23MB
 - Update frequency: Daily
-- Contains: Price trends, averages, low/high prices for all products
+- Contains: Price trends, averages, low/high prices for all products (singles and sealed)
 
 ### Export Data Structure
 
@@ -96,22 +104,25 @@ https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json
 | **Rate limits** | None | 30,000/day |
 | **Authentication** | Not required | Required (OAuth) |
 | **Data freshness** | Daily updates | Real-time |
-| **Product info** | ✅ Yes | ✅ Yes |
+| **Product info** | ✅ Yes (singles + sealed) | ✅ Yes |
 | **Price trends** | ✅ Yes | ✅ Yes |
+| **Default sorting** | ✅ By avg price | ❌ No |
 | **Seller offers** | ❌ No | ✅ Yes |
 | **Condition filtering** | ❌ No | ✅ Yes |
 | **Foil/Signed** | ❌ No | ✅ Yes |
 | **Shipping costs** | ❌ No | ✅ Yes |
-| **File size** | ~41MB total | N/A |
+| **File size** | ~64MB (18MB singles + 23MB sealed + 23MB prices) | N/A |
 
 ### When to Use Each
 
 **Use Export Data for:**
 - Basic card searches and price checks
+- Sealed product searches (booster boxes, prerelease packs)
 - Price trend analysis
 - Offline access
 - High-volume searches without rate limits
 - Applications that don't need seller-specific data
+- When you want results sorted by cheapest options first
 
 **Use Live API for:**
 - Real-time seller offers

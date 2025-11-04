@@ -79,8 +79,9 @@ src/
 
 #### Key Files Outside src/
 - `data/` - Export data files directory (gitignored)
-  - `products_singles_1.json` - ~18MB product catalog
-  - `price_guide_1.json` - ~23MB price guide
+  - `products_singles.json` - ~18MB singles catalog
+  - `products_nonsingles.json` - ~23MB sealed products catalog
+  - `price_guide.json` - ~23MB price guide
 - `config.example.json` - Template for user configuration
 - `README.md` - User-facing documentation
 - `API_DOCUMENTATION.md` - Cardmarket API & export data reference
@@ -144,32 +145,37 @@ Important constants:
 **Export Downloader (downloader.ts):**
 - **Purpose:** Download and manage daily Cardmarket export files
 - **URLs:**
-  - Products: `https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_1.json`
+  - Singles: `https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_1.json`
+  - Sealed: `https://downloads.s3.cardmarket.com/productCatalog/productList/products_nonsingles_1.json`
   - Price Guide: `https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json`
 - **Features:**
   - Downloads files to `./data` directory
   - Checks file freshness (24-hour threshold)
-  - Streaming download for large files (~41MB total)
+  - Streaming download for large files (~64MB total: 18MB singles + 23MB sealed + 23MB prices)
   - Automatic timestamp tracking via `createdAt` field
   - Manual force-download option
 - **Key Methods:**
-  - `downloadAll(force)` - Download both files if needed
-  - `loadProducts()` - Load products from disk
+  - `downloadAll(force)` - Download all three files if needed
+  - `loadProductsSingles()` - Load singles catalog from disk
+  - `loadProductsNonsingles()` - Load sealed products catalog from disk
   - `loadPriceGuide()` - Load price guide from disk
   - `needsUpdate()` - Check if data is >24 hours old
-  - `getDataStatus()` - Get data age and status
+  - `getDataStatus()` - Get data age and status for all files
 
 **Export Searcher (searcher.ts):**
 - **Purpose:** Search and query export data in memory
-- **Data Structure:** Products array + Map<idProduct, PriceGuideEntry>
+- **Data Structure:** Products array (merged singles + sealed) + Map<idProduct, PriceGuideEntry>
 - **Features:**
+  - Loads and merges both singles and sealed products catalogs
   - O(1) price guide lookups via Map
   - O(n) product name searches (case-insensitive)
   - Exact and partial matching
   - Price range filtering
-  - Result limiting and sorting
+  - Configurable sorting (trend, low, avg, name, none)
+  - Default sort by avg price (ascending - cheapest first)
+  - Null-safe price sorting (null prices moved to end)
 - **Key Methods:**
-  - `load()` - Load export data into memory
+  - `load()` - Load and merge export data into memory
   - `search(term, options)` - Search products by name
   - `getById(idProduct)` - Get product + price by ID
   - `getStatus()` - Get data freshness status
@@ -205,16 +211,17 @@ Important constants:
   ```json
   {
     "credentials": {
-      "appToken": "string",
-      "appSecret": "string",
-      "accessToken": "string",
-      "accessTokenSecret": "string"
+      "appToken": "string (optional)",
+      "appSecret": "string (optional)",
+      "accessToken": "string (optional)",
+      "accessTokenSecret": "string (optional)"
     },
     "preferences": {
       "country": "DE",
       "currency": "EUR",
       "language": "en",
-      "maxResults": 20
+      "maxResults": 20,
+      "defaultSort": "avg (or: trend, low, name, none)"
     },
     "cache": {
       "enabled": true,
@@ -265,10 +272,11 @@ Important constants:
 3. SearchCommand.shouldUseExport() → true
 4. SearchCommand executes:
    - Initialize ExportSearcher (if needed)
-   - Load export data from ./data into memory
+   - Load and merge export data (singles + sealed) from ./data into memory
    - Search products by name (case-insensitive)
    - Filter by price range (if specified)
-   - Sort by price trend
+   - Sort by configurable field (default: avg price ascending)
+   - Null prices moved to end of results
    - Limit results
    - Format and output (export table/JSON)
 
@@ -329,11 +337,13 @@ Important constants:
 ## Known Limitations & Gotchas
 
 1. **Export Data Limitations**
-   - Only includes MTG singles (no sealed products, accessories)
+   - Includes MTG singles AND sealed products (booster boxes, packs, etc.)
+   - Does NOT include accessories or other non-card products
    - No individual seller offers or availability
    - No condition/foil/signed filtering capability
    - Updated daily, may be slightly outdated
-   - ~41MB file size (requires initial download)
+   - ~64MB file size (requires initial download: 18MB singles + 23MB sealed + 23MB prices)
+   - Some products may have null prices (handled gracefully, sorted to end)
 
 2. **Shipping Costs are Estimates**
    - Real shipping costs require querying seller shipping methods
@@ -611,10 +621,56 @@ Major update adding dual-mode data source capability:
 
 **Technical Notes:**
 - Export files stored in `./data/` (gitignored)
-- Files downloaded from S3: ~41MB total
+- Files downloaded from S3: ~64MB total (18MB singles + 23MB sealed + 23MB prices)
 - 24-hour freshness check
 - Map-based price guide for O(1) lookups
 - Streaming downloads for large files
+
+### Sealed Products and Configurable Sorting (2025-11-04)
+Major enhancement to export data mode with sealed products and sorting:
+
+**What Changed:**
+- Added support for `products_nonsingles_1.json` export file (~23MB sealed products)
+- Downloader now fetches both singles and sealed products
+- Searcher merges both catalogs into single searchable dataset
+- Implemented configurable default sorting (trend, low, avg, name, none)
+- Default sort changed to avg price ascending (cheapest first)
+- Added null-safe sorting (null prices moved to end of results)
+- Updated help command to show all default values
+- Added `preferences.defaultSort` to configuration schema
+
+**New Capabilities:**
+- Search for booster boxes, prerelease packs, bundles, etc.
+- Configurable sort order via config.json
+- Smart null price handling in sort and display
+- Full type safety with ExportSortOption type
+- Help command documents all defaults
+
+**Modified Files:**
+- `src/export/downloader.ts` - Added nonsingles support, split download methods
+- `src/export/searcher.ts` - Merges singles + nonsingles, tracks oldest date
+- `src/commands/search.ts` - Configurable sorting with null handling
+- `src/commands/types.ts` - Added ExportSortOption type, defaultSort to Preferences
+- `src/config.ts` - Validates defaultSort configuration
+- `src/commands/help.ts` - Shows all default values
+- `src/index.ts` - update-data shows both file statuses
+- `src/utils/formatter.ts` - Fixed null price handling (return 'N/A')
+- `config.example.json` - Added defaultSort field
+
+**Benefits:**
+- Comprehensive product coverage (singles + sealed)
+- User control over sort order preference
+- Smart handling of missing price data
+- Better UX with documented defaults
+- Sealed product price comparison
+- Optimal buying strategy (cheapest first by default)
+
+**Technical Notes:**
+- Total export data: ~64MB (increased from ~41MB)
+- Searcher uses oldest timestamp for safety
+- Null prices: `price == null` check handles both null and undefined
+- Sort options validated at config load time
+- Default value: 'avg' (average price ascending)
 
 ---
 
