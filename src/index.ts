@@ -36,6 +36,8 @@ program
   .option('--no-cache', 'Disable caching for this request')
   .option('--max-results <number>', 'Maximum number of results', parseInt)
   .option('--live', 'Force live API data instead of export')
+  .option('--show-foil', 'Show foil price column (overrides hideFoil preference)')
+  .option('--hide-per-booster', 'Hide per-booster price column (overrides showPerBooster preference)')
   .action(async (cardName: string, options: Record<string, unknown>) => {
     try {
       // Load configuration
@@ -60,6 +62,8 @@ program
         noCache: options.cache === false,
         maxResults: options.maxResults as number | undefined,
         live: options.live as boolean | undefined,
+        showFoil: options.showFoil as boolean | undefined,
+        hidePerBooster: options.hidePerBooster as boolean | undefined,
       };
 
       // Validate options

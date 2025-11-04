@@ -674,6 +674,108 @@ Major enhancement to export data mode with sealed products and sorting:
 
 ---
 
+### Per-Booster Pricing for Sealed Products (2025-11-04)
+Major enhancement adding automatic per-booster price calculations for sealed products:
+
+**What Changed:**
+- Created comprehensive booster count database (`data/booster-counts.json`)
+- Implemented `BoosterCountLookup` utility for intelligent booster count lookups
+- Added `hideFoil` and `showPerBooster` preferences to configuration
+- Enhanced formatter to dynamically show/hide foil and per-booster columns
+- Added CLI flags `--show-foil` and `--hide-per-booster` for runtime overrides
+- Updated all documentation (README, API_DOCUMENTATION, AI_CONTEXT)
+
+**New Capabilities:**
+- Automatic per-booster pricing for booster boxes, bundles, and prerelease packs
+- Historical awareness (36-pack boxes → 30-pack boxes in 2025)
+- Set-specific overrides (Masters sets: 24 packs, Collector boxes: 12 packs)
+- Customizable display via config or CLI flags
+- Smart product type detection via category and name patterns
+
+**Booster Count Database (`data/booster-counts.json`):**
+- **Default counts** by product type (Play Booster Box: 36, Bundle: 9, etc.)
+- **Category mappings** for different product categories (Magic Display, Magic Fatpack, etc.)
+- **Set-specific overrides** for non-standard configurations
+  - Aetherdrift/Innistrad Remastered: 30-pack Play Booster Boxes
+  - Masters/Horizons/Conspiracy sets: 24-pack boxes
+  - Historical bundles: 8-pack (Zendikar Rising era), 10-pack (Kaladesh era)
+- **Pattern matching** for intelligent product identification
+
+**BoosterCountLookup Utility (`src/utils/booster-count.ts`):**
+- `getBoosterCount(productName, categoryName)` - Returns booster count or null
+- `supportsPerBoosterPricing(categoryName)` - Checks if category supports pricing
+- `getSupportedCategories()` - Returns all supported categories
+- **Smart set name extraction** from product names
+- **Layered lookup priority:**
+  1. Set-specific overrides (e.g., "Aetherdrift Play Booster Box" → 30)
+  2. Category pattern matching (e.g., "Collector Booster Box" → 12)
+  3. Returns null if no match (shows N/A in UI)
+
+**Modified Files:**
+- `src/commands/types.ts` - Added `hideFoil`, `showPerBooster` to Preferences; `showFoil`, `hidePerBooster` to SearchOptions
+- `src/config.ts` - Validates new boolean preferences with defaults (hideFoil: true, showPerBooster: true)
+- `src/utils/booster-count.ts` - NEW: Booster count lookup utility
+- `src/utils/formatter.ts` - Dynamic column management, per-booster calculation
+- `src/commands/search.ts` - Passes display options to formatter with CLI overrides
+- `src/index.ts` - Added `--show-foil` and `--hide-per-booster` CLI flags
+- `config.example.json` - Added hideFoil and showPerBooster preferences
+- `data/booster-counts.json` - NEW: Comprehensive booster count database
+
+**Configuration:**
+```json
+{
+  "preferences": {
+    "hideFoil": true,        // Hide foil column (default: true)
+    "showPerBooster": true   // Show per-booster column (default: true)
+  }
+}
+```
+
+**CLI Override Flags:**
+- `--show-foil` - Show foil column (overrides hideFoil preference)
+- `--hide-per-booster` - Hide per-booster column (overrides showPerBooster preference)
+
+**Calculation Logic:**
+```typescript
+Per-Booster Price = Average Price ÷ Number of Boosters
+```
+
+**Display Rules:**
+- Shows per-booster column for: Magic Display, Magic Fatpack, Magic TournamentPack
+- Shows "N/A" for: Singles, Sets, unsupported categories, missing booster counts
+- Uses avg price (most representative market value)
+- Respects user preferences and CLI overrides
+
+**Example Output:**
+```
+┌──────────────────────────────┬──────┬──────┬──────┬──────────────┐
+│ Card Name                    │ Avg  │ ...  │ ...  │ Per Booster  │
+├──────────────────────────────┼──────┼──────┼──────┼──────────────┤
+│ Play Booster Box (36 packs)  │119.90│  ... │  ... │ 3.33 €       │
+│ Collector Box (12 packs)     │316.47│  ... │  ... │ 26.37 €      │
+│ Bundle (9 packs)             │ 45.07│  ... │  ... │ 5.01 €       │
+│ Prerelease Pack (6 packs)    │ 30.57│  ... │  ... │ 5.09 €       │
+│ Single Card                  │  1.50│  ... │  ... │ N/A          │
+└──────────────────────────────┴──────┴──────┴──────┴──────────────┘
+```
+
+**Benefits:**
+- Easy sealed product value comparison
+- Identifies best value options (lowest per-booster cost)
+- Historical accuracy (handles MTG's changing product configurations)
+- Flexible display (users can customize via config or CLI)
+- Clean UI (foil column hidden by default for sealed product searches)
+
+**Technical Notes:**
+- Booster count database is version-controlled (not gitignored)
+- Set name extraction handles various product name formats
+- Null-safe throughout (missing data shows N/A, not errors)
+- Lookup performance: O(1) for category check, O(n) for pattern matching (n = small)
+- Compatible with both export and JSON output modes
+- CLI flags take precedence over config preferences
+
+---
+
 ## Quick Start for AI Assistant
 
 When picking up this project:

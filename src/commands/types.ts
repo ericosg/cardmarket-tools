@@ -20,6 +20,8 @@ export interface Preferences {
   language: string;
   maxResults: number;
   defaultSort?: ExportSortOption;
+  hideFoil?: boolean;
+  showPerBooster?: boolean;
 }
 
 export interface CacheConfig {
@@ -50,6 +52,8 @@ export interface SearchOptions {
   noCache?: boolean;
   maxResults?: number;
   live?: boolean; // Force API usage instead of export data
+  showFoil?: boolean; // Override hideFoil preference to show foil column
+  hidePerBooster?: boolean; // Override showPerBooster preference to hide per-booster column
 }
 
 export type CardCondition = 'MT' | 'NM' | 'EX' | 'GD' | 'LP' | 'PL' | 'PO';

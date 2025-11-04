@@ -181,10 +181,20 @@ export class SearchCommand {
 
     // Get data source info
     const status = this.exportSearcher.getStatus();
-    const dataAge = status.priceGuideAge
-      ? `${Math.floor(status.priceGuideAge)}h old`
-      : 'unknown age';
-    const dataSource = `Export data (updated ${status.priceGuideDate?.toISOString().split('T')[0]}, ${dataAge})`;
+
+    // Use the oldest age for display (most conservative approach)
+    const oldestAge = Math.max(
+      status.productsAge ?? 0,
+      status.priceGuideAge ?? 0
+    );
+    const dataAge = oldestAge > 0 ? `${Math.floor(oldestAge)}h old` : 'unknown age';
+
+    // Use the oldest date for display
+    const oldestDate = [status.productsDate, status.priceGuideDate]
+      .filter((d): d is Date => d !== undefined)
+      .sort((a, b) => a.getTime() - b.getTime())[0];
+
+    const dataSource = `Export data (updated ${oldestDate?.toISOString().split('T')[0]}, ${dataAge})`;
 
     // Show warning if data is old
     if (status.needsUpdate) {
@@ -195,6 +205,10 @@ export class SearchCommand {
       );
     }
 
+    // Determine display options (config defaults + CLI overrides)
+    const hideFoil = options.showFoil ? false : (this.config.preferences.hideFoil ?? true);
+    const showPerBooster = options.hidePerBooster ? false : (this.config.preferences.showPerBooster ?? true);
+
     // Output results
     if (options.json) {
       console.log(Formatter.formatExportJSON(filteredResults));
@@ -203,6 +217,8 @@ export class SearchCommand {
         Formatter.formatExportTable(filteredResults, {
           currency,
           dataSource,
+          hideFoil,
+          showPerBooster,
         })
       );
     }

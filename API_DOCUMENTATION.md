@@ -107,6 +107,7 @@ https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json
 | **Product info** | ✅ Yes (singles + sealed) | ✅ Yes |
 | **Price trends** | ✅ Yes | ✅ Yes |
 | **Default sorting** | ✅ By avg price | ❌ No |
+| **Per-booster pricing** | ✅ Yes | ❌ No |
 | **Seller offers** | ❌ No | ✅ Yes |
 | **Condition filtering** | ❌ No | ✅ Yes |
 | **Foil/Signed** | ❌ No | ✅ Yes |
@@ -117,7 +118,8 @@ https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json
 
 **Use Export Data for:**
 - Basic card searches and price checks
-- Sealed product searches (booster boxes, prerelease packs)
+- Sealed product searches (booster boxes, prerelease packs, bundles)
+- Per-booster price comparisons for sealed products
 - Price trend analysis
 - Offline access
 - High-volume searches without rate limits
@@ -130,6 +132,49 @@ https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json
 - Shipping cost calculations
 - Seller reputation and ratings
 - Making purchases (requires authenticated endpoints)
+
+### Per-Booster Pricing (Export Data Only)
+
+The CLI automatically calculates per-booster pricing for sealed products when using export data mode.
+
+**Supported Product Types:**
+- **Booster Boxes** (Play, Draft, Set, Collector)
+  - Standard: 36 packs (2024 sets)
+  - Modern: 30 packs (2025+ sets like Aetherdrift)
+  - Set Booster Boxes: 30 packs
+  - Collector Booster Boxes: 12 packs
+  - Masters/Horizons/Conspiracy: 24 packs
+
+- **Bundles/Fat Packs**
+  - Current: 9 packs (Murders at Karlov Manor onwards)
+  - Previous: 8 packs (Zendikar Rising - Lost Caverns of Ixalan)
+  - Legacy: 10 packs (Kaladesh - Aether Revolt)
+
+- **Prerelease Packs**
+  - Standard: 6 packs
+
+**Calculation:**
+```
+Per-Booster Price = Average Price ÷ Number of Boosters
+```
+
+**Example Output:**
+```
+Edge of Eternities Play Booster Box | €119.90 avg | €3.33 per booster (36 packs)
+Edge of Eternities Bundle          | €45.07 avg  | €5.01 per booster (9 packs)
+Edge of Eternities Prerelease Pack | €30.57 avg  | €5.09 per booster (6 packs)
+```
+
+**Booster Count Database:**
+Located at `data/booster-counts.json`, this file contains:
+- Default counts by product type
+- Set-specific overrides (for sets with non-standard configurations)
+- Historical configurations (accounting for changes over MTG's history)
+
+**CLI Display Options:**
+- `hideFoil`: Hide foil price column (default: true)
+- `showPerBooster`: Show per-booster column (default: true)
+- Override with `--show-foil` or `--hide-per-booster` flags
 
 ---
 

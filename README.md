@@ -7,12 +7,14 @@ A command-line tool for searching Magic: The Gathering cards on Cardmarket (EU) 
 - 🔍 Search for MTG cards on Cardmarket
 - 📦 **Export Data Mode** - Uses daily Cardmarket export files by default (no API calls needed!)
 - 💰 Compare prices including shipping costs to your location
+- 🎁 **Per-Booster Pricing** - Automatic price-per-booster calculations for sealed products (boxes, bundles, prerelease packs)
 - 🌍 Filter by seller country and shipping availability
 - ⚡ Dual data sources: Fast export data for basic searches, live API for advanced features
 - 📊 Display results in table or JSON format
 - 🎯 Advanced filtering (condition, foil, language, set, price range)
 - 🔄 Automatic daily data updates with manual refresh option
 - 📦 Group offers by seller to optimize shipping
+- 🎨 Customizable display (hide foil column, show/hide per-booster pricing)
 
 ## Prerequisites
 
@@ -78,7 +80,9 @@ Create a `config.json` file in the root directory:
     "currency": "EUR",
     "language": "en",
     "maxResults": 20,
-    "defaultSort": "avg"
+    "defaultSort": "avg",
+    "hideFoil": true,
+    "showPerBooster": true
   },
   "cache": {
     "enabled": true,
@@ -99,6 +103,8 @@ Create a `config.json` file in the root directory:
 - `preferences.language`: Interface language
 - `preferences.maxResults`: Default maximum number of results (default: 20)
 - `preferences.defaultSort`: Export data sort order - options: `trend`, `low`, `avg`, `name`, `none` (default: `avg`)
+- `preferences.hideFoil`: Hide foil price column in export results (default: true)
+- `preferences.showPerBooster`: Show per-booster price column for sealed products (default: true)
 - `cache.enabled`: Enable/disable response caching (default: true)
 - `cache.ttl`: Cache time-to-live in seconds (default: 3600)
 - `export.enabled`: Enable export data mode (default: true)
@@ -205,6 +211,21 @@ pnpm start search "Mox Pearl" --min-price 100 --max-price 500
 pnpm start search "Force of Will" --set ALL
 ```
 
+**Sealed products with per-booster pricing:**
+```bash
+# Find booster boxes with per-booster cost
+pnpm start search "Edge of Eternities Play Booster Box"
+
+# Compare all sealed products for a set
+pnpm start search "Bloomburrow" --top 10
+
+# Show foil prices too (overrides hideFoil preference)
+pnpm start search "Foundations Bundle" --show-foil
+
+# Hide per-booster column (overrides showPerBooster preference)
+pnpm start search "Duskmourn Collector Booster Box" --hide-per-booster
+```
+
 **Include shipping costs:**
 ```bash
 # Show total price including shipping
@@ -244,25 +265,27 @@ pnpm start search "Brainstorm" --no-cache
 
 ### Command Options
 
-| Option | Description | Values |
-|--------|-------------|--------|
-| `--condition` | Card condition | NM, EX, GD, LP, PL, PO |
-| `--foil` | Only foil cards | boolean |
-| `--signed` | Only signed cards | boolean |
-| `--altered` | Only altered cards | boolean |
-| `--language` | Card language | EN, DE, FR, IT, ES, JP, etc. |
-| `--set` | Expansion set code | 3-letter set codes |
-| `--min-price` | Minimum price | number |
-| `--max-price` | Maximum price | number |
-| `--include-shipping` | Include shipping costs | boolean |
-| `--filter-country` | Filter sellers by shipping to your country | boolean |
-| `--top` | Show top N offers | number |
-| `--group-by-seller` | Group offers by seller | boolean |
-| `--sort` | Sort results | price, condition, seller-rating |
-| `--json` | Output in JSON format | boolean |
-| `--live` | Force live API mode instead of export data | boolean |
-| `--no-cache` | Disable caching for this request | boolean |
-| `--max-results` | Maximum results to show | number |
+| Option | Description | Values | Default |
+|--------|-------------|--------|---------|
+| `--condition` | Card condition (forces API mode) | NM, EX, GD, LP, PL, PO | - |
+| `--foil` | Only foil cards (forces API mode) | boolean | false |
+| `--signed` | Only signed cards (forces API mode) | boolean | false |
+| `--altered` | Only altered cards (forces API mode) | boolean | false |
+| `--language` | Card language | EN, DE, FR, IT, ES, JP, etc. | - |
+| `--set` | Expansion set code | 3-letter set codes | - |
+| `--min-price` | Minimum price | number | - |
+| `--max-price` | Maximum price | number | - |
+| `--include-shipping` | Include shipping costs (forces API mode) | boolean | false |
+| `--filter-country` | Filter sellers by shipping to your country | boolean | false |
+| `--top` | Show top N offers | number | - |
+| `--group-by-seller` | Group offers by seller | boolean | false |
+| `--sort` | Sort results | price, condition, seller-rating | - |
+| `--json` | Output in JSON format | boolean | false |
+| `--live` | Force live API mode instead of export data | boolean | false |
+| `--no-cache` | Disable caching for this request | boolean | false |
+| `--max-results` | Maximum results to show | number | from config |
+| `--show-foil` | Show foil price column (overrides hideFoil) | boolean | from config |
+| `--hide-per-booster` | Hide per-booster column (overrides showPerBooster) | boolean | from config |
 
 ### Help Command
 
@@ -282,6 +305,19 @@ pnpm start search "Black Lotus" --condition NM --include-shipping --sort price -
 **Find foil Lightning Bolts in English under 10 EUR:**
 ```bash
 pnpm start search "Lightning Bolt" --foil --language EN --max-price 10
+```
+
+**Compare booster box values by per-booster cost:**
+```bash
+pnpm start search "Foundations Play Booster Box"
+# Output includes per-booster price:
+# Edge of Eternities Play Booster Box | €119.90 avg | €3.33 per booster
+```
+
+**Find the best value prerelease pack:**
+```bash
+pnpm start search "Bloomburrow Prerelease"
+# Shows €5.09 per booster (6 packs total)
 ```
 
 **Export search results to JSON:**
@@ -311,10 +347,13 @@ cardmarket-cli/
 │   └── utils/
 │       ├── shipping.ts          # Shipping cost calculations
 │       ├── formatter.ts         # Output formatting
-│       └── cache.ts             # Caching utilities
-├── data/                        # Export data files (gitignored)
-│   ├── products_singles_1.json
-│   └── price_guide_1.json
+│       ├── cache.ts             # Caching utilities
+│       └── booster-count.ts     # Per-booster pricing lookup
+├── data/                        # Data files (gitignored)
+│   ├── products_singles.json    # Singles export data
+│   ├── products_nonsingles.json # Sealed products export data
+│   ├── price_guide.json         # Price guide export data
+│   └── booster-counts.json      # Booster count database
 ├── config.example.json          # Example configuration
 ├── package.json
 ├── tsconfig.json

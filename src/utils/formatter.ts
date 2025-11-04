@@ -2,6 +2,7 @@ import Table from 'cli-table3';
 import chalk from 'chalk';
 import { EnrichedArticle, Product, SearchResult } from '../commands/types';
 import { ExportSearchResult } from '../export/types';
+import { BoosterCountLookup } from './booster-count';
 
 /**
  * Output formatter for search results
@@ -292,13 +293,20 @@ export class Formatter {
     options: {
       currency?: string;
       dataSource?: string;
+      hideFoil?: boolean;
+      showPerBooster?: boolean;
     } = {}
   ): string {
     if (results.length === 0) {
       return chalk.yellow('No results found.');
     }
 
-    const { currency = 'EUR', dataSource } = options;
+    const {
+      currency = 'EUR',
+      dataSource,
+      hideFoil = false,
+      showPerBooster = false,
+    } = options;
 
     const output: string[] = [];
 
@@ -309,21 +317,35 @@ export class Formatter {
       output.push('');
     }
 
+    // Build table headers dynamically
+    const headers: string[] = [
+      chalk.bold('Card Name'),
+      chalk.bold('Expansion'),
+      chalk.bold('Trend'),
+      chalk.bold('Low'),
+      chalk.bold('Avg'),
+    ];
+
+    const colWidths: number[] = [40, 20, 12, 12, 12];
+
+    if (!hideFoil) {
+      headers.push(chalk.bold('Foil Trend'));
+      colWidths.push(12);
+    }
+
+    if (showPerBooster) {
+      headers.push(chalk.bold('Per Booster'));
+      colWidths.push(14);
+    }
+
     // Create table
     const table = new Table({
-      head: [
-        chalk.bold('Card Name'),
-        chalk.bold('Expansion'),
-        chalk.bold('Trend'),
-        chalk.bold('Low'),
-        chalk.bold('Avg'),
-        chalk.bold('Foil Trend'),
-      ].map((h) => h),
+      head: headers,
       style: {
         head: [],
         border: [],
       },
-      colWidths: [40, 20, 12, 12, 12, 12],
+      colWidths,
     });
 
     for (const result of results) {
@@ -335,10 +357,31 @@ export class Formatter {
         priceGuide ? Formatter.formatPrice(priceGuide.trend, currency) : 'N/A',
         priceGuide ? Formatter.formatPrice(priceGuide.low, currency) : 'N/A',
         priceGuide ? Formatter.formatPrice(priceGuide.avg, currency) : 'N/A',
-        priceGuide && priceGuide['trend-foil'] !== null
-          ? Formatter.formatPrice(priceGuide['trend-foil'], currency)
-          : 'N/A',
       ];
+
+      // Add foil column if not hidden
+      if (!hideFoil) {
+        row.push(
+          priceGuide && priceGuide['trend-foil'] !== null
+            ? Formatter.formatPrice(priceGuide['trend-foil'], currency)
+            : 'N/A'
+        );
+      }
+
+      // Add per-booster column if enabled
+      if (showPerBooster) {
+        const boosterCount = BoosterCountLookup.getBoosterCount(
+          product.name,
+          product.categoryName
+        );
+
+        if (boosterCount && priceGuide && priceGuide.avg !== null) {
+          const perBoosterPrice = priceGuide.avg / boosterCount;
+          row.push(Formatter.formatPrice(perBoosterPrice, currency));
+        } else {
+          row.push('N/A');
+        }
+      }
 
       table.push(row);
     }

@@ -2,6 +2,38 @@
 
 This document tracks planned enhancements and features for the Cardmarket CLI tool.
 
+## Recently Implemented ✅
+
+### Per-Booster Pricing for Sealed Products (2025-11-04)
+**Status:** ✅ Completed
+
+Automatic price-per-booster calculations for sealed products:
+- Comprehensive booster count database with historical configurations
+- Smart product type detection and set-specific overrides
+- Customizable display options (hideFoil, showPerBooster)
+- CLI flags for runtime overrides (--show-foil, --hide-per-booster)
+- Supports booster boxes, bundles, and prerelease packs
+
+### Sealed Products Support (2025-11-04)
+**Status:** ✅ Completed
+
+Full support for sealed products in export data mode:
+- Booster boxes, prerelease packs, bundles, and more
+- Merged singles and sealed products into unified search
+- Configurable default sorting (trend, low, avg, name, none)
+- Smart null price handling
+
+### Export Data Mode (2025-11-03)
+**Status:** ✅ Completed
+
+Daily export files as alternative to API:
+- No API credentials required for basic searches
+- Fast local searches with price trends
+- Automatic data updates
+- Dual-mode system (export + API)
+
+---
+
 ## Priority 1: High Value Features
 
 ### Watch Mode / Price Tracking

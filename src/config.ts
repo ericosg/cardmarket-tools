@@ -131,6 +131,14 @@ export class ConfigLoader {
       );
     }
 
+    if (preferences.hideFoil !== undefined && typeof preferences.hideFoil !== 'boolean') {
+      throw new ConfigError('preferences.hideFoil must be a boolean');
+    }
+
+    if (preferences.showPerBooster !== undefined && typeof preferences.showPerBooster !== 'boolean') {
+      throw new ConfigError('preferences.showPerBooster must be a boolean');
+    }
+
     // Validate cache settings (optional)
     const cache = cfg.cache as Record<string, unknown> || {};
 
@@ -162,6 +170,8 @@ export class ConfigLoader {
         language: (preferences.language as string) || 'en',
         maxResults: (preferences.maxResults as number) || 20,
         defaultSort: (preferences.defaultSort as 'trend' | 'low' | 'avg' | 'name' | 'none') || 'avg',
+        hideFoil: preferences.hideFoil !== undefined ? (preferences.hideFoil as boolean) : true,
+        showPerBooster: preferences.showPerBooster !== undefined ? (preferences.showPerBooster as boolean) : true,
       },
       cache: {
         enabled: cache.enabled !== undefined ? (cache.enabled as boolean) : true,

@@ -11,7 +11,9 @@
     "currency": "EUR",
     "language": "en",
     "maxResults": 20,
-    "defaultSort": "avg"
+    "defaultSort": "avg",
+    "hideFoil": true,
+    "showPerBooster": true
   },
   "cache": {
     "enabled": true,

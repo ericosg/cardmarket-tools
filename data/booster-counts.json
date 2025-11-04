@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "lastUpdated": "2025-11-04",
+  "defaultCounts": {
+    "Play Booster Box": 36,
+    "Draft Booster Box": 36,
+    "Set Booster Box": 30,
+    "Collector Booster Box": 12,
+    "Bundle": 9,
+    "Fat Pack": 9,
+    "Prerelease Pack": 6
+  },
+  "categoryMappings": {
+    "Magic Display": {
+      "patterns": [
+        { "match": "Collector Booster Box", "count": 12 },
+        { "match": "Play Booster Box", "count": 36 },
+        { "match": "Draft Booster Box", "count": 36 },
+        { "match": "Set Booster Box", "count": 30 },
+        { "match": "Theme Deck Display", "count": null }
+      ]
+    },
+    "Magic Fatpack": {
+      "patterns": [
+        { "match": "Bundle", "count": 9 },
+        { "match": "Fat Pack", "count": 9 }
+      ]
+    },
+    "Magic TournamentPack": {
+      "patterns": [
+        { "match": "Prerelease Pack", "count": 6 },
+        { "match": "Tournament Pack", "count": null }
+      ]
+    }
+  },
+  "setSpecificOverrides": {
+    "_comment": "Sets with non-standard booster counts",
+    "Aetherdrift": {
+      "Play Booster Box": 30
+    },
+    "Innistrad Remastered": {
+      "Play Booster Box": 30
+    },
+    "Tarkir: Dragonstorm": {
+      "Play Booster Box": 30
+    },
+    "Masters 25": {
+      "Booster Box": 24
+    },
+    "Modern Masters": {
+      "Booster Box": 24
+    },
+    "Modern Masters 2015": {
+      "Booster Box": 24
+    },
+    "Modern Masters 2017": {
+      "Booster Box": 24
+    },
+    "Iconic Masters": {
+      "Booster Box": 24
+    },
+    "Eternal Masters": {
+      "Booster Box": 24
+    },
+    "Ultimate Masters": {
+      "Booster Box": 24
+    },
+    "Double Masters": {
+      "Booster Box": 24
+    },
+    "Double Masters 2022": {
+      "Booster Box": 24
+    },
+    "Modern Horizons": {
+      "Booster Box": 24
+    },
+    "Modern Horizons 2": {
+      "Booster Box": 24
+    },
+    "Modern Horizons 3": {
+      "Booster Box": 24
+    },
+    "Conspiracy": {
+      "Booster Box": 24
+    },
+    "Conspiracy: Take the Crown": {
+      "Booster Box": 24
+    },
+    "March of the Machine: The Aftermath": {
+      "Booster Box": 24
+    },
+    "Zendikar Rising": {
+      "Set Booster Box": 30,
+      "Draft Booster Box": 36,
+      "Bundle": 8
+    },
+    "Kaldheim": {
+      "Set Booster Box": 30,
+      "Draft Booster Box": 36,
+      "Bundle": 8
+    },
+    "Strixhaven: School of Mages": {
+      "Set Booster Box": 30,
+      "Draft Booster Box": 36,
+      "Bundle": 8
+    },
+    "Adventures in the Forgotten Realms": {
+      "Set Booster Box": 30,
+      "Draft Booster Box": 36,
+      "Bundle": 8
+    },
+    "Innistrad: Midnight Hunt": {
+      "Set Booster Box": 30,
+      "Draft Booster Box": 36,
+      "Bundle": 8
+    },
+    "Innistrad: Crimson Vow": {
+      "Set Booster Box": 30,
+      "Draft Booster Box": 36,
+      "Bundle": 8
+    },
+    "Kamigawa: Neon Dynasty": {
+      "Set Booster Box": 30,
+      "Draft Booster Box": 36,
+      "Bundle": 8
+    },
+    "Streets of New Capenna": {
+      "Set Booster Box": 30,
+      "Draft Booster Box": 36,
+      "Bundle": 8
+    },
+    "Dominaria United": {
+      "Set Booster Box": 30,
+      "Draft Booster Box": 36,
+      "Bundle": 8
+    },
+    "The Brothers' War": {
+      "Set Booster Box": 30,
+      "Draft Booster Box": 36,
+      "Bundle": 8
+    },
+    "Phyrexia: All Will Be One": {
+      "Set Booster Box": 30,
+      "Draft Booster Box": 36,
+      "Bundle": 8
+    },
+    "March of the Machine": {
+      "Set Booster Box": 30,
+      "Draft Booster Box": 36,
+      "Bundle": 8
+    },
+    "Wilds of Eldraine": {
+      "Set Booster Box": 30,
+      "Draft Booster Box": 36,
+      "Bundle": 8
+    },
+    "The Lost Caverns of Ixalan": {
+      "Set Booster Box": 30,
+      "Draft Booster Box": 36,
+      "Bundle": 8
+    },
+    "Murders at Karlov Manor": {
+      "Play Booster Box": 36,
+      "Bundle": 9
+    },
+    "Outlaws of Thunder Junction": {
+      "Play Booster Box": 36,
+      "Bundle": 9
+    },
+    "Bloomburrow": {
+      "Play Booster Box": 36,
+      "Bundle": 9
+    },
+    "Duskmourn: House of Horror": {
+      "Play Booster Box": 36,
+      "Bundle": 9
+    },
+    "Foundations": {
+      "Play Booster Box": 36,
+      "Bundle": 9
+    },
+    "Kaladesh": {
+      "Bundle": 10
+    },
+    "Aether Revolt": {
+      "Bundle": 10
+    }
+  },
+  "notes": {
+    "Play Booster Era": "Started with Murders at Karlov Manor (2024). Initially 36 packs, reduced to 30 starting with Aetherdrift (2025).",
+    "Set Booster Era": "Started with Zendikar Rising (2020), phased out with Murders at Karlov Manor (2024). Always 30 packs.",
+    "Draft Booster Era": "Standard from Mirage through pre-Play Booster era. Always 36 packs.",
+    "Bundle Evolution": "10 packs (Kaladesh-Innistrad Midnight Hunt), 8 packs (Innistrad Midnight Hunt-Lost Caverns of Ixalan), 9 packs (Murders at Karlov Manor onwards).",
+    "Masters/Horizons/Conspiracy": "Premium/Supplemental sets typically have 24 packs for 8-player draft (3 packs each).",
+    "Collector Boosters": "Always 12 packs per box."
+  }
+}
