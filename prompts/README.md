@@ -6,11 +6,9 @@ This directory contains reusable prompts for generating various analysis reports
 
 ### 1. Cheapest Booster Report
 
-**Purpose**: Generates a comprehensive markdown report comparing booster prices across all recent MTG sets.
+**Purpose**: Generates a comprehensive markdown report comparing booster prices across all MTG sets from 2023-2025.
 
-**Files**:
-- `cheapest-booster-report.md` - Full detailed instructions and report template
-- `generate-booster-report-prompt.txt` - Concise copy-paste version
+**File**: `generate-booster-report.md`
 
 **Slash Command**:
 ```
@@ -26,11 +24,11 @@ The slash command is available at `.claude/commands/booster-report.md`
 /booster-report
 ```
 
-**Option 2 - Copy-Paste Prompt**:
-Copy the contents of `generate-booster-report-prompt.txt` and paste into Claude.
-
-**Option 3 - Manual Reference**:
-Follow the detailed instructions in `cheapest-booster-report.md`
+**Option 2 - Direct Reference**:
+Follow the instructions in `generate-booster-report.md` which includes:
+- Complete list of 23 sets to analyze (no web search needed)
+- All 23 commands pre-written and ready to execute
+- Step-by-step data collection and report generation instructions
 
 ## Output Example
 
@@ -42,20 +40,24 @@ The report will include:
 
 ## Report Features
 
-- 🌐 **Web-powered**: Automatically finds the latest MTG sets
-- 💰 **Comprehensive**: Compares prices across 2023-2025 releases
+- 📋 **Pre-configured**: All 23 sets from 2023-2025 included (no web search needed)
+- 💰 **Comprehensive**: Compares prices across all recent releases
 - 📊 **Ranked**: Multiple ranking categories for different purchase types
 - 📝 **Markdown**: Clean, formatted output ready to share
 - 🎯 **Actionable**: Clear winners and value recommendations
+- ⚡ **Fast**: All commands ready to copy-paste and execute
 
 ## Adding New Prompts
 
 To add a new analysis prompt:
 
-1. Create a detailed version in `prompts/[name].md`
-2. Create a concise version in `prompts/[name]-prompt.txt`
-3. Create a slash command in `.claude/commands/[name].md`
-4. Update this README
+1. Create a comprehensive prompt file in `prompts/[name].md` with:
+   - Complete list of entities/items to analyze
+   - Pre-written commands (no web searches)
+   - Step-by-step instructions for data collection
+   - Report generation template
+2. Create a slash command in `.claude/commands/[name].md`
+3. Update this README
 
 ## Example Output Structure
 
