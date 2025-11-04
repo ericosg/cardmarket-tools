@@ -9,29 +9,26 @@ importers:
   .:
     dependencies:
       axios:
-        specifier: ^1.6.2
+        specifier: ^1.13.1
         version: 1.13.1
       chalk:
         specifier: ^4.1.2
         version: 4.1.2
       cli-table3:
-        specifier: ^0.6.3
+        specifier: ^0.6.5
         version: 0.6.5
       commander:
         specifier: ^11.1.0
         version: 11.1.0
-      crypto:
-        specifier: ^1.0.1
-        version: 1.0.1
       oauth-1.0a:
         specifier: ^2.2.6
         version: 2.2.6
     devDependencies:
       '@types/node':
-        specifier: ^20.10.4
+        specifier: ^20.19.24
         version: 20.19.24
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.9.3
         version: 5.9.3
 
 packages:
@@ -83,10 +80,6 @@ packages:
   commander@11.1.0:
     resolution: {integrity: sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==}
     engines: {node: '>=16'}
-
-  crypto@1.0.1:
-    resolution: {integrity: sha512-VxBKmeNcqQdiUQUW2Tzq0t377b54N2bMtXO/qiLa+6eRRmmC4qT3D4OnTGoT/U6O9aklQ/jTwbOtRMTTY8G0Ig==}
-    deprecated: This package is no longer supported. It's now a built-in Node module. If you've depended on crypto, you should switch to the one that's built-in.
 
   delayed-stream@1.0.0:
     resolution: {integrity: sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==}
@@ -253,8 +246,6 @@ snapshots:
       delayed-stream: 1.0.0
 
   commander@11.1.0: {}
-
-  crypto@1.0.1: {}
 
   delayed-stream@1.0.0: {}
 
