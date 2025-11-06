@@ -295,6 +295,7 @@ export class Formatter {
       dataSource?: string;
       hideFoil?: boolean;
       showPerBooster?: boolean;
+      showEV?: boolean;
     } = {}
   ): string {
     if (results.length === 0) {
@@ -306,6 +307,7 @@ export class Formatter {
       dataSource,
       hideFoil = false,
       showPerBooster = false,
+      showEV = false,
     } = options;
 
     const output: string[] = [];
@@ -336,6 +338,15 @@ export class Formatter {
     if (showPerBooster) {
       headers.push(chalk.bold('Per Booster'));
       colWidths.push(14);
+    }
+
+    if (showEV) {
+      headers.push(chalk.bold('Box EV'));
+      headers.push(chalk.bold('EV Ratio'));
+      headers.push(chalk.bold('Status'));
+      colWidths.push(12);
+      colWidths.push(10);
+      colWidths.push(12);
     }
 
     // Create table
@@ -383,6 +394,21 @@ export class Formatter {
         }
       }
 
+      // Add EV columns if enabled
+      if (showEV) {
+        const ev = (result as any).ev;
+
+        if (ev) {
+          row.push(Formatter.formatPrice(ev.boxEV, currency));
+          row.push(Formatter.formatEVRatio(ev.evRatio));
+          row.push(Formatter.formatEVStatus(ev.evRatio));
+        } else {
+          row.push('N/A');
+          row.push('N/A');
+          row.push('-');
+        }
+      }
+
       table.push(row);
     }
 
@@ -398,5 +424,27 @@ export class Formatter {
    */
   static formatExportJSON(results: ExportSearchResult[]): string {
     return JSON.stringify(results, null, 2);
+  }
+
+  /**
+   * Format EV ratio with color coding
+   * @param ratio EV ratio (boxEV / price)
+   * @returns Formatted ratio string
+   */
+  private static formatEVRatio(ratio: number): string {
+    const formatted = ratio.toFixed(2) + 'x';
+    if (ratio >= 1.2) return chalk.green(formatted);
+    if (ratio >= 1.0) return chalk.yellow(formatted);
+    return chalk.red(formatted);
+  }
+
+  /**
+   * Format EV status indicator
+   * @param ratio EV ratio
+   * @returns Status string
+   */
+  private static formatEVStatus(ratio: number): string {
+    if (ratio >= 1.0) return chalk.green('✓ Pos');
+    return chalk.yellow('⚠ Neg');
   }
 }

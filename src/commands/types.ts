@@ -5,6 +5,16 @@ export interface Config {
   preferences: Preferences;
   cache: CacheConfig;
   export: ExportConfig;
+  ev?: EVConfig;
+}
+
+export interface EVConfig {
+  enabled: boolean;
+  autoUpdate: boolean;
+  updateFrequency: 'daily' | 'weekly' | 'manual';
+  bulkCardThreshold: number;
+  showVariance: boolean;
+  confidenceThreshold: number;
 }
 
 export interface Credentials {
@@ -56,6 +66,7 @@ export interface SearchOptions {
   showFoil?: boolean; // Override hideFoil preference to show foil column
   hidePerBooster?: boolean; // Override showPerBooster preference to hide per-booster column
   productFilter?: ProductFilter; // Filter by singles, nonsingles, or both
+  showEV?: boolean; // Show expected value for sealed products
 }
 
 export type CardCondition = 'MT' | 'NM' | 'EX' | 'GD' | 'LP' | 'PL' | 'PO';

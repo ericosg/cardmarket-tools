@@ -7,6 +7,7 @@ import { HelpCommand } from './commands/help';
 import { Formatter } from './utils/formatter';
 import { SearchOptions, CardCondition, SortOption, ProductFilter } from './commands/types';
 import { ExportDownloader } from './export/downloader';
+import { ScryfallDownloader } from './ev/scryfall-downloader';
 
 const program = new Command();
 
@@ -39,6 +40,7 @@ program
   .option('--show-foil', 'Show foil price column (overrides hideFoil preference)')
   .option('--hide-per-booster', 'Hide per-booster price column (overrides showPerBooster preference)')
   .option('--product-filter <type>', 'Filter by product type: singles, nonsingles, both (default: both)')
+  .option('--show-ev', 'Show expected value for sealed products')
   .action(async (cardName: string, options: Record<string, unknown>) => {
     try {
       // Load configuration
@@ -66,6 +68,7 @@ program
         showFoil: options.showFoil as boolean | undefined,
         hidePerBooster: options.hidePerBooster as boolean | undefined,
         productFilter: options.productFilter as ProductFilter | undefined,
+        showEV: options.showEv as boolean | undefined,
       };
 
       // Validate options
@@ -84,39 +87,59 @@ program
 // Update-data command
 program
   .command('update-data')
-  .description('Download/update export data files')
+  .description('Download/update export data files (Cardmarket + Scryfall)')
   .option('-f, --force', 'Force download even if data is recent')
+  .option('--scryfall-only', 'Only update Scryfall data')
+  .option('--cardmarket-only', 'Only update Cardmarket data')
   .action(async (options: Record<string, unknown>) => {
     try {
       const force = options.force as boolean || false;
+      const scryfallOnly = options.scryfallOnly as boolean || false;
+      const cardmarketOnly = options.cardmarketOnly as boolean || false;
 
-      console.log('Updating export data...\n');
+      // Update Cardmarket data
+      if (!scryfallOnly) {
+        console.log('Updating Cardmarket export data...\n');
 
-      const result = await ExportDownloader.downloadAll(force);
+        const result = await ExportDownloader.downloadAll(force);
 
-      if (result.productsSinglesDownloaded) {
-        console.log('✓ Singles catalog updated');
-      } else {
-        console.log('✓ Singles catalog is up to date');
+        if (result.productsSinglesDownloaded) {
+          console.log('✓ Singles catalog updated');
+        } else {
+          console.log('✓ Singles catalog is up to date');
+        }
+
+        if (result.productsNonsinglesDownloaded) {
+          console.log('✓ Sealed products catalog updated');
+        } else {
+          console.log('✓ Sealed products catalog is up to date');
+        }
+
+        if (result.priceGuideDownloaded) {
+          console.log('✓ Price guide updated');
+        } else {
+          console.log('✓ Price guide is up to date');
+        }
+
+        const status = ExportDownloader.getDataStatus();
+        console.log(`\nCardmarket data status:`);
+        console.log(`  Singles age: ${status.productsSinglesAge ? Math.floor(status.productsSinglesAge) + 'h' : 'N/A'}`);
+        console.log(`  Sealed products age: ${status.productsNonsinglesAge ? Math.floor(status.productsNonsinglesAge) + 'h' : 'N/A'}`);
+        console.log(`  Price guide age: ${status.priceGuideAge ? Math.floor(status.priceGuideAge) + 'h' : 'N/A'}`);
+        console.log('');
       }
 
-      if (result.productsNonsinglesDownloaded) {
-        console.log('✓ Sealed products catalog updated');
-      } else {
-        console.log('✓ Sealed products catalog is up to date');
-      }
+      // Update Scryfall data
+      if (!cardmarketOnly) {
+        console.log('Updating Scryfall data...\n');
+        await ScryfallDownloader.downloadBulkData(force);
 
-      if (result.priceGuideDownloaded) {
-        console.log('✓ Price guide updated');
-      } else {
-        console.log('✓ Price guide is up to date');
+        const scryfallStatus = ScryfallDownloader.getDataStatus();
+        console.log(`\nScryfall data status:`);
+        console.log(`  Cards: ${scryfallStatus.cardCount}`);
+        console.log(`  Age: ${scryfallStatus.age ? Math.floor(scryfallStatus.age) + 'h' : 'N/A'}`);
+        console.log(`  File size: ${(scryfallStatus.fileSize / 1024 / 1024).toFixed(2)} MB`);
       }
-
-      const status = ExportDownloader.getDataStatus();
-      console.log(`\nData status:`);
-      console.log(`  Singles age: ${status.productsSinglesAge ? Math.floor(status.productsSinglesAge) + 'h' : 'N/A'}`);
-      console.log(`  Sealed products age: ${status.productsNonsinglesAge ? Math.floor(status.productsNonsinglesAge) + 'h' : 'N/A'}`);
-      console.log(`  Price guide age: ${status.priceGuideAge ? Math.floor(status.priceGuideAge) + 'h' : 'N/A'}`);
 
     } catch (error) {
       console.error(Formatter.formatError(error));

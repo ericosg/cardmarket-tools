@@ -173,6 +173,38 @@ export class ConfigLoader {
       throw new ConfigError('export.autoUpdate must be a boolean');
     }
 
+    // Validate EV settings (optional)
+    const evConfig = cfg.ev as Record<string, unknown> || {};
+
+    if (evConfig.enabled !== undefined && typeof evConfig.enabled !== 'boolean') {
+      throw new ConfigError('ev.enabled must be a boolean');
+    }
+
+    if (evConfig.autoUpdate !== undefined && typeof evConfig.autoUpdate !== 'boolean') {
+      throw new ConfigError('ev.autoUpdate must be a boolean');
+    }
+
+    if (evConfig.updateFrequency !== undefined) {
+      const validFrequencies = ['daily', 'weekly', 'manual'];
+      if (!validFrequencies.includes(evConfig.updateFrequency as string)) {
+        throw new ConfigError(
+          `ev.updateFrequency must be one of: ${validFrequencies.join(', ')}`
+        );
+      }
+    }
+
+    if (evConfig.bulkCardThreshold !== undefined && typeof evConfig.bulkCardThreshold !== 'number') {
+      throw new ConfigError('ev.bulkCardThreshold must be a number');
+    }
+
+    if (evConfig.showVariance !== undefined && typeof evConfig.showVariance !== 'boolean') {
+      throw new ConfigError('ev.showVariance must be a boolean');
+    }
+
+    if (evConfig.confidenceThreshold !== undefined && typeof evConfig.confidenceThreshold !== 'number') {
+      throw new ConfigError('ev.confidenceThreshold must be a number');
+    }
+
     // Build validated config with defaults
     const validatedConfig: Config = {
       credentials: validatedCredentials,
@@ -193,6 +225,14 @@ export class ConfigLoader {
       export: {
         enabled: exportConfig.enabled !== undefined ? (exportConfig.enabled as boolean) : true,
         autoUpdate: exportConfig.autoUpdate !== undefined ? (exportConfig.autoUpdate as boolean) : true,
+      },
+      ev: {
+        enabled: evConfig.enabled !== undefined ? (evConfig.enabled as boolean) : true,
+        autoUpdate: evConfig.autoUpdate !== undefined ? (evConfig.autoUpdate as boolean) : true,
+        updateFrequency: (evConfig.updateFrequency as 'daily' | 'weekly' | 'manual') || 'weekly',
+        bulkCardThreshold: (evConfig.bulkCardThreshold as number) || 1.0,
+        showVariance: evConfig.showVariance !== undefined ? (evConfig.showVariance as boolean) : false,
+        confidenceThreshold: (evConfig.confidenceThreshold as number) || 0.7,
       },
     };
 

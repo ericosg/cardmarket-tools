@@ -3,6 +3,7 @@ import { CardmarketClient } from '../api/client';
 import { ShippingCalculator } from '../utils/shipping';
 import { Formatter } from '../utils/formatter';
 import { ExportSearcher } from '../export/searcher';
+import { EVCalculator } from '../ev/ev-calculator';
 import {
   Config,
   SearchOptions,
@@ -19,6 +20,7 @@ export class SearchCommand {
   private api?: CardmarketAPI;
   private config: Config;
   private exportSearcher?: ExportSearcher;
+  private evCalculator?: EVCalculator;
 
   constructor(config: Config) {
     this.config = config;
@@ -207,6 +209,34 @@ export class SearchCommand {
       );
     }
 
+    // Calculate EV if requested
+    if (options.showEV && this.config.ev?.enabled) {
+      try {
+        if (!this.evCalculator) {
+          this.evCalculator = new EVCalculator(this.config.ev.bulkCardThreshold);
+          await this.evCalculator.initialize();
+        }
+
+        for (const result of filteredResults) {
+          // Only calculate EV for sealed products
+          if (result.product.categoryName !== 'Magic Single') {
+            const ev = await this.evCalculator.calculateEV(
+              result.product.idProduct,
+              result.product.name,
+              result.product.categoryName,
+              result.product.idExpansion,
+              result.priceGuide?.avg || 0
+            );
+
+            // Attach EV to result
+            (result as any).ev = ev;
+          }
+        }
+      } catch (error: any) {
+        console.warn(`⚠ EV calculation failed: ${error.message}`);
+      }
+    }
+
     // Determine display options (config defaults + CLI overrides)
     const hideFoil = options.showFoil ? false : (this.config.preferences.hideFoil ?? true);
     const showPerBooster = options.hidePerBooster ? false : (this.config.preferences.showPerBooster ?? true);
@@ -221,6 +251,7 @@ export class SearchCommand {
           dataSource,
           hideFoil,
           showPerBooster,
+          showEV: options.showEV,
         })
       );
     }

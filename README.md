@@ -8,6 +8,7 @@ A command-line tool for searching Magic: The Gathering cards on Cardmarket (EU) 
 - 📦 **Export Data Mode** - Uses daily Cardmarket export files by default (no API calls needed!)
 - 💰 Compare prices including shipping costs to your location
 - 🎁 **Per-Booster Pricing** - Automatic price-per-booster calculations for sealed products (boxes, bundles, prerelease packs)
+- 📈 **Expected Value (EV) Calculator** - Calculate expected value of booster boxes using real card prices from Scryfall
 - 🌍 Filter by seller country and shipping availability
 - ⚡ Dual data sources: Fast export data for basic searches, live API for advanced features
 - 📊 Display results in table or JSON format
@@ -93,6 +94,14 @@ Create a `config.json` file in the root directory:
   "export": {
     "enabled": true,
     "autoUpdate": true
+  },
+  "ev": {
+    "enabled": true,
+    "autoUpdate": true,
+    "updateFrequency": "weekly",
+    "bulkCardThreshold": 1.0,
+    "showVariance": false,
+    "confidenceThreshold": 0.7
   }
 }
 ```
@@ -112,6 +121,12 @@ Create a `config.json` file in the root directory:
 - `cache.ttl`: Cache time-to-live in seconds (default: 3600)
 - `export.enabled`: Enable export data mode (default: true)
 - `export.autoUpdate`: Automatically download export data if missing or old (default: true)
+- `ev.enabled`: Enable Expected Value calculations (default: true)
+- `ev.autoUpdate`: Automatically download Scryfall data if missing or old (default: true)
+- `ev.updateFrequency`: How often to update Scryfall data - options: `daily`, `weekly`, `manual` (default: `weekly`)
+- `ev.bulkCardThreshold`: Minimum card price to include in EV calculations in EUR (default: 1.0)
+- `ev.showVariance`: Show variance range in EV results (default: false)
+- `ev.confidenceThreshold`: Minimum confidence for EV calculations (default: 0.7)
 
 ## Data Sources
 
@@ -183,10 +198,13 @@ pnpm start search "Black Lotus"
 
 **Update export data:**
 ```bash
-# Update if data is old (>24 hours)
+# Update Cardmarket export data if old (>24 hours)
 pnpm start update-data
 
-# Force update even if data is recent
+# Update Scryfall EV data if old (>7 days)
+pnpm start update-data --scryfall-only
+
+# Update both Cardmarket and Scryfall data
 pnpm start update-data --force
 ```
 
@@ -214,10 +232,13 @@ pnpm start search "Mox Pearl" --min-price 100 --max-price 500
 pnpm start search "Force of Will" --set ALL
 ```
 
-**Sealed products with per-booster pricing:**
+**Sealed products with per-booster pricing and EV:**
 ```bash
-# Find booster boxes with per-booster cost
-pnpm start search "Edge of Eternities Play Booster Box"
+# Find booster boxes with per-booster cost and expected value
+pnpm start search "Bloomburrow Play Booster Box" --show-ev
+
+# Calculate EV for multiple sets
+pnpm start search "booster box" --show-ev --top 10
 
 # Search only sealed products (no singles)
 pnpm start search "Bloomburrow" --product-filter nonsingles --top 10
@@ -293,6 +314,7 @@ pnpm start search "Brainstorm" --no-cache
 | `--show-foil` | Show foil price column (overrides hideFoil) | boolean | from config |
 | `--hide-per-booster` | Hide per-booster column (overrides showPerBooster) | boolean | from config |
 | `--product-filter` | Filter by product type | singles, nonsingles, both | both |
+| `--show-ev` | Show expected value for sealed products | boolean | false |
 
 ### Help Command
 
@@ -314,17 +336,17 @@ pnpm start search "Black Lotus" --condition NM --include-shipping --sort price -
 pnpm start search "Lightning Bolt" --foil --language EN --max-price 10
 ```
 
-**Compare booster box values by per-booster cost:**
+**Compare booster box values by expected value:**
 ```bash
-pnpm start search "Foundations Play Booster Box"
-# Output includes per-booster price:
-# Edge of Eternities Play Booster Box | €119.90 avg | €3.33 per booster
+pnpm start search "Foundations Play Booster Box" --show-ev
+# Output includes EV data:
+# Foundations Play Booster Box | €124.88 avg | €3.47 per booster | Box EV: €799.54 | Ratio: 6.40x | ✓ Pos
 ```
 
-**Find the best value prerelease pack:**
+**Find the best EV booster boxes:**
 ```bash
-pnpm start search "Bloomburrow Prerelease"
-# Shows €5.09 per booster (6 packs total)
+pnpm start search "booster box" --show-ev --top 10 --product-filter nonsingles
+# Compares EV ratios across different sets
 ```
 
 **Export search results to JSON:**
@@ -347,6 +369,13 @@ cardmarket-cli/
 │   │   ├── types.ts             # Export data TypeScript types
 │   │   ├── downloader.ts        # Export file downloader
 │   │   └── searcher.ts          # Export data searcher
+│   ├── ev/
+│   │   ├── types.ts             # EV TypeScript types
+│   │   ├── scryfall-downloader.ts  # Scryfall bulk data downloader
+│   │   ├── scryfall-loader.ts   # Card data loader with indexing
+│   │   ├── expansion-mapper.ts  # Maps Cardmarket to Scryfall sets
+│   │   ├── collation-engine.ts  # Booster pack composition engine
+│   │   └── ev-calculator.ts     # Main EV calculation logic
 │   ├── commands/
 │   │   ├── search.ts            # Search command implementation
 │   │   ├── help.ts              # Help command
@@ -360,7 +389,11 @@ cardmarket-cli/
 │   ├── products_singles.json    # Singles export data
 │   ├── products_nonsingles.json # Sealed products export data
 │   ├── price_guide.json         # Price guide export data
-│   └── booster-counts.json      # Booster count database
+│   ├── booster-counts.json      # Booster count database
+│   ├── scryfall_cards.json      # Scryfall card data with EUR prices
+│   ├── scryfall_metadata.json   # Scryfall data metadata
+│   ├── expansion_mapping.json   # Cardmarket to Scryfall mapping
+│   └── booster_collation.json   # Pack composition rules
 ├── config.example.json          # Example configuration
 ├── package.json
 ├── tsconfig.json
@@ -410,6 +443,11 @@ This tool includes built-in caching to minimize API calls. Cache is enabled by d
 **"Export data is more than 24 hours old" warning:**
 - Run `pnpm start update-data` to refresh data
 - Or use `--live` flag to bypass export data
+
+**EV calculation showing "N/A":**
+- Run `pnpm start update-data --scryfall-only` to download Scryfall data
+- Ensure product is a sealed booster product (not singles)
+- Check that the set is supported (recent sets preferred)
 
 **"Invalid OAuth signature" error:**
 - Verify your API credentials in `config.json`

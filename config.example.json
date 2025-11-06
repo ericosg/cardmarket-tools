@@ -23,5 +23,14 @@
   "export": {
     "enabled": true,
     "autoUpdate": true
+  },
+  "ev": {
+    "_comment": "Expected Value (EV) calculation settings",
+    "enabled": true,
+    "autoUpdate": true,
+    "updateFrequency": "weekly",
+    "bulkCardThreshold": 1.0,
+    "showVariance": false,
+    "confidenceThreshold": 0.7
   }
 }
